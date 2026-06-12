@@ -1,9 +1,22 @@
 import type { ReactNode } from 'react';
 
-export function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
+export function Field({
+  label,
+  error,
+  required = false,
+  children,
+}: {
+  label: string;
+  error?: string;
+  required?: boolean;
+  children: ReactNode;
+}) {
   return (
     <label className="block">
-      <span className="text-sm font-semibold text-slate-800">{label}</span>
+      <span className="text-sm font-semibold text-slate-800">
+        {label}
+        {required ? <span className="text-red-700"> *</span> : null}
+      </span>
       <div className="mt-1">{children}</div>
       {error ? <span className="mt-1 block text-sm text-red-700">{error}</span> : null}
     </label>

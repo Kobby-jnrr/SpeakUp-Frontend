@@ -1,14 +1,24 @@
-export type Role = 'student' | 'admin';
+export type Role = "student" | "junioradmin" | "superadmin";
 
-export type ReportStatus = 'Pending' | 'In Review' | 'Resolved' | 'Closed';
-export type Urgency = 'Standard' | 'Emergency';
-export type AbuseType = 'Sexual Abuse' | 'Physical Abuse' | 'Verbal Abuse' | 'Emotional Abuse' | 'Harassment' | 'Bullying' | 'Other';
+export type ReportStatus = "Pending" | "In Review" | "Resolved" | "Closed";
+
+export type Urgency = "Standard" | "Emergency";
+
+export type AbuseType =
+  | "Sexual Abuse"
+  | "Physical Abuse"
+  | "Verbal Abuse"
+  | "Emotional Abuse"
+  | "Harassment"
+  | "Bullying"
+  | "Other";
 
 export interface User {
   id: string;
   name: string;
   email: string;
   role: Role;
+  backendRole?: string;
   studentId?: string;
   department?: string;
   title?: string;
@@ -27,27 +37,15 @@ export interface InternalNote {
   date: string;
 }
 
-export interface Report {
+export interface NotificationItem {
   id: string;
-  studentName: string;
-  studentId: string | null;
-  studentEmail?: string;
-  isAnonymous: boolean;
-  type: AbuseType;
-  status: ReportStatus;
-  urgency: Urgency;
-  location: string;
-  incidentDate: string;
-  submittedAt: string;
-  lastUpdated: string;
-  description: string;
-  accusedPerson: string;
-  contactPreference: string;
-  evidence: string[];
-  assignedCounselor: string;
-  adminResponse: string;
-  timeline: TimelineItem[];
-  internalNotes: InternalNote[];
+  role: "student" | "admin";
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+  tone: "info" | "success" | "warning" | "error" | "urgent";
+  reportId?: string;
 }
 
 export interface Resource {
@@ -55,20 +53,9 @@ export interface Resource {
   title: string;
   category: string;
   summary: string;
-  contact?: string;
   published: boolean;
   updatedAt: string;
-}
-
-export interface NotificationItem {
-  id: string;
-  role: Role;
-  title: string;
-  message: string;
-  date: string;
-  read: boolean;
-  tone: 'info' | 'warning' | 'success' | 'urgent';
-  reportId?: string;
+  contact?: string;
 }
 
 export interface DashboardStats {
@@ -80,4 +67,56 @@ export interface DashboardStats {
   anonymousReports: number;
   reportsThisWeek: number;
   reportsThisMonth: number;
+}
+
+export interface Report {
+  // core identity
+  id: string;
+  studentName: string;
+  studentId: string | null;
+  studentEmail?: string;
+  complainantGender?: string;
+  department?: string;
+  contactNumber?: string;
+  isAnonymous: boolean;
+
+  type: AbuseType;
+  complaintNature?: string[];
+  status: ReportStatus;
+  urgency: Urgency;
+
+  location: string;
+  incidentDate: string;
+  incidentTime?: string;
+
+  description: string;
+
+  submittedAt: string;
+  lastUpdated: string;
+
+  accusedPerson: string;
+
+  respondentName?: string;
+  respondentPosition?: string;
+  respondentDepartment?: string;
+  relationship?: string;
+
+  witness1Name?: string;
+  witness1Contact?: string;
+  witness2Name?: string;
+  witness2Contact?: string;
+
+  contactPreference: string;
+  confidential?: boolean;
+  priorReportWhere?: string;
+  desiredOutcome?: string;
+
+  evidence: string[];
+  evidenceDescription?: string;
+
+  assignedCounselor: string;
+  adminResponse: string;
+
+  timeline: TimelineItem[];
+  internalNotes: InternalNote[];
 }

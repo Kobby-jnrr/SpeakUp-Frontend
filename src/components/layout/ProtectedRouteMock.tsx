@@ -1,24 +1,53 @@
-import type { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
-import type { Role } from '../../types';
-import { EmptyState } from '../ui/Cards';
+import { ReactNode } from "react";
+import { Navigate } from "react-router-dom";
+import type { AuthUser } from "../../utils/auth";
 
-export function ProtectedRouteMock({ role, children }: { role: Role; children: ReactNode }) {
-  const { currentUser } = useApp();
-  const location = useLocation();
+type Role = "student" | "junioradmin" | "superadmin";
 
-  if (!currentUser) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+export function ProtectedRouteMock({
+  children,
+  role,
+}: {
+  children: ReactNode;
+  role: Role;
+}) {
+  const token = localStorage.getItem("token");
+  const userStr = localStorage.getItem("user");
+
+  if (!token || !userStr) {
+    return <Navigate to="/login" replace />;
   }
 
-  if (currentUser.role !== role) {
-    return (
-      <div className="min-h-screen bg-slate-50 p-6">
-        <EmptyState title="Access restricted" message="This page is available only to users with the correct demo role. Use the role switcher on the login page to continue." />
-      </div>
-    );
+  let user: AuthUser | null = null;
+
+  try {
+    user = JSON.parse(userStr);
+  } catch {
+    return <Navigate to="/login" replace />;
   }
 
-  return children;
+  const userRole = (user?.role || "").toLowerCase();
+
+  // STUDENT
+  if (role === "student") {
+    if (userRole !== "student") {
+      return <Navigate to="/login" replace />;
+    }
+  }
+
+  // JUNIOR ADMIN ONLY
+  if (role === "junioradmin") {
+    if (userRole !== "junioradmin") {
+      return <Navigate to="/login" replace />;
+    }
+  }
+
+  // SUPER ADMIN ONLY
+  if (role === "superadmin") {
+    if (userRole !== "superadmin") {
+      return <Navigate to="/login" replace />;
+    }
+  }
+
+  return <>{children}</>;
 }

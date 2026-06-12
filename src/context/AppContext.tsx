@@ -1,16 +1,37 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
-import { mockNotifications } from '../mock/notifications';
-import { mockReports } from '../mock/reports';
-import { mockResources } from '../mock/resources';
-import { mockUsers } from '../mock/users';
-import type { NotificationItem, Report, ReportStatus, Resource, Role, User } from '../types';
-import { todayIso } from '../utils/format';
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
+
+import { mockNotifications } from "../mock/notifications";
+import { mockReports } from "../mock/reports";
+import { mockResources } from "../mock/resources";
+import { mockUsers } from "../mock/users";
+
+import type {
+  NotificationItem,
+  Report,
+  ReportStatus,
+  Resource,
+  Role,
+  User,
+} from "../types";
+
+import { todayIso } from "../utils/format";
+import { authService } from "../api/authService";
+import { reportService } from "../api/reportService";
+import { mapApiReport } from "../utils/reportMapper";
+import { mapRole } from "../utils/roleMapper";
 
 interface ToastMessage {
   id: string;
   title: string;
   message?: string;
-  tone?: 'success' | 'info' | 'warning' | 'error';
+  tone?: "success" | "info" | "warning" | "error";
 }
 
 interface AppContextValue {
@@ -20,16 +41,48 @@ interface AppContextValue {
   resources: Resource[];
   notifications: NotificationItem[];
   toasts: ToastMessage[];
+
+  login: (email: string, password: string) => Promise<void>;
+  register: (data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    password: string;
+  }) => Promise<void>;
+
   loginAs: (role: Role) => void;
   logout: () => void;
-  addToast: (toast: Omit<ToastMessage, 'id'>) => void;
+
+  addToast: (toast: Omit<ToastMessage, "id">) => void;
   removeToast: (id: string) => void;
-  submitReport: (report: Omit<Report, 'id' | 'submittedAt' | 'lastUpdated' | 'status' | 'timeline' | 'internalNotes' | 'adminResponse' | 'assignedCounselor'>) => Report;
-  updateReport: (id: string, update: Partial<Report>, activity?: string) => void;
+
+  submitReport: (
+    report: Omit<
+      Report,
+      | "id"
+      | "submittedAt"
+      | "lastUpdated"
+      | "status"
+      | "timeline"
+      | "internalNotes"
+      | "adminResponse"
+      | "assignedCounselor"
+    >,
+  ) => Report;
+
+  updateReport: (
+    id: string,
+    update: Partial<Report>,
+    activity?: string,
+  ) => void;
+
   addInternalNote: (id: string, note: string) => void;
+
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: (role: Role) => void;
-  addResource: (resource: Omit<Resource, 'id' | 'updatedAt'>) => void;
+
+  addResource: (resource: Omit<Resource, "id" | "updatedAt">) => void;
   updateResource: (id: string, update: Partial<Resource>) => void;
   deleteResource: (id: string) => void;
 }
@@ -37,87 +90,234 @@ interface AppContextValue {
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(mockUsers[0]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [reports, setReports] = useState<Report[]>(mockReports);
   const [resources, setResources] = useState<Resource[]>(mockResources);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(mockNotifications);
+  const [notifications, setNotifications] =
+    useState<NotificationItem[]>(mockNotifications);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  const addToast = (toast: Omit<ToastMessage, 'id'>) => {
+  // load user
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+
+    if (savedUser && token) {
+      try {
+        setCurrentUser(JSON.parse(savedUser));
+      } catch {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      }
+    }
+  }, []);
+
+  // load reports
+  useEffect(() => {
+    const loadReports = async () => {
+      if (!currentUser) return;
+
+      try {
+        const response =
+          currentUser.role === "junioradmin" ||
+          currentUser.role === "superadmin"
+            ? await reportService.getAllReports()
+            : await reportService.getMyReports();
+
+        setReports(response.data.map(mapApiReport));
+      } catch (error) {
+        console.warn("Using local report data", error);
+      }
+    };
+
+    loadReports();
+  }, [currentUser]);
+
+  const addToast = (toast: Omit<ToastMessage, "id">) => {
     const id = `toast-${Date.now()}`;
     setToasts((items) => [...items, { id, ...toast }]);
-    window.setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), 3800);
+
+    window.setTimeout(() => {
+      setToasts((items) => items.filter((t) => t.id !== id));
+    }, 3800);
   };
 
-  const value = useMemo<AppContextValue>(() => ({
-    currentUser,
-    role: currentUser?.role ?? null,
-    reports,
-    resources,
-    notifications,
-    toasts,
-    loginAs: (role) => {
-      const user = mockUsers.find((item) => item.role === role) ?? null;
-      setCurrentUser(user);
-      addToast({ title: role === 'admin' ? 'Admin demo session active' : 'Student demo session active', tone: 'success' });
-    },
-    logout: () => setCurrentUser(null),
-    addToast,
-    removeToast: (id) => setToasts((items) => items.filter((item) => item.id !== id)),
-    submitReport: (reportDraft) => {
-      const now = todayIso();
-      const report: Report = {
-        ...reportDraft,
-        id: `REP-2026-${String(reports.length + 1).padStart(3, '0')}`,
-        status: 'Pending',
-        submittedAt: now,
-        lastUpdated: now,
-        assignedCounselor: 'Unassigned',
-        adminResponse: 'Your report has been received. Authorized staff will review it according to university procedure.',
-        timeline: [{ label: 'Report submitted', date: now, actor: 'Student' }, { label: 'Report received', date: now, actor: 'System' }],
-        internalNotes: [],
-      };
-      setReports((items) => [report, ...items]);
-      setNotifications((items) => [
-        { id: `not-${Date.now()}`, role: 'admin', title: report.urgency === 'Emergency' ? 'Emergency report received' : 'New report submitted', message: `${report.id} is ready for review.`, date: now, read: false, tone: report.urgency === 'Emergency' ? 'urgent' : 'info', reportId: report.id },
-        ...items,
-      ]);
-      return report;
-    },
-    updateReport: (id, update, activity) => {
-      const now = todayIso();
-      setReports((items) => items.map((report) => report.id === id ? {
-        ...report,
-        ...update,
-        lastUpdated: now,
-        timeline: activity ? [...report.timeline, { label: activity, date: now, actor: currentUser?.name ?? 'Admin' }] : report.timeline,
-      } : report));
-    },
-    addInternalNote: (id, note) => {
-      const now = todayIso();
-      setReports((items) => items.map((report) => report.id === id ? {
-        ...report,
-        lastUpdated: now,
-        internalNotes: [...report.internalNotes, { id: `note-${Date.now()}`, note, author: currentUser?.name ?? 'Admin', date: now }],
-        timeline: [...report.timeline, { label: 'Internal note added', date: now, actor: currentUser?.name ?? 'Admin' }],
-      } : report));
-    },
-    markNotificationRead: (id) => setNotifications((items) => items.map((item) => item.id === id ? { ...item, read: true } : item)),
-    markAllNotificationsRead: (role) => setNotifications((items) => items.map((item) => item.role === role ? { ...item, read: true } : item)),
-    addResource: (resource) => setResources((items) => [{ ...resource, id: `res-${Date.now()}`, updatedAt: todayIso() }, ...items]),
-    updateResource: (id, update) => setResources((items) => items.map((item) => item.id === id ? { ...item, ...update, updatedAt: todayIso() } : item)),
-    deleteResource: (id) => setResources((items) => items.filter((item) => item.id !== id)),
-  }), [currentUser, notifications, reports, resources, toasts]);
+  const value = useMemo<AppContextValue>(
+    () => ({
+      currentUser,
+      role: currentUser?.role ?? null,
+      reports,
+      resources,
+      notifications,
+      toasts,
+
+      login: async (email, password) => {
+        try {
+          const res = await authService.login({ email, password });
+          const { token, firstName, lastName, role } = res.data;
+          const id = res.data.id ?? res.data.Id;
+
+          const normalizedRole = mapRole(role);
+
+          const user: User = {
+            id: String(id),
+            name: `${firstName} ${lastName}`,
+            email,
+            role: normalizedRole,
+            backendRole: String(role ?? ""),
+          };
+
+          localStorage.setItem("token", token);
+          localStorage.setItem("user", JSON.stringify(user));
+          setCurrentUser(user);
+
+          addToast({ title: "Login successful", tone: "success" });
+        } catch (err: any) {
+          addToast({
+            title: "Login failed",
+            message: err.response?.data?.message || "Invalid credentials",
+            tone: "error",
+          });
+          throw err;
+        }
+      },
+
+      register: async (data) => {
+        try {
+          await authService.register(data);
+          addToast({
+            title: "Account created",
+            message: "You can now login",
+            tone: "success",
+          });
+        } catch (err: any) {
+          addToast({
+            title: "Registration failed",
+            message: err.response?.data?.message || "Error",
+            tone: "error",
+          });
+          throw err;
+        }
+      },
+
+      loginAs: (role) => {
+        const user = mockUsers.find((u) => u.role === role) ?? null;
+        setCurrentUser(user);
+
+        addToast({
+          title:
+            role === "superadmin"
+              ? "Super Admin session active"
+              : role === "junioradmin"
+                ? "Junior Admin session active"
+                : "Student session active",
+          tone: "success",
+        });
+      },
+
+      logout: () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setCurrentUser(null);
+      },
+
+      addToast,
+      removeToast: (id) =>
+        setToasts((items) => items.filter((t) => t.id !== id)),
+
+      submitReport: (reportDraft) => {
+        const now = todayIso();
+
+        const report: Report = {
+          ...reportDraft,
+          id: `REP-2026-${String(reports.length + 1).padStart(3, "0")}`,
+          status: "Pending",
+          submittedAt: now,
+          lastUpdated: now,
+          assignedCounselor: "Unassigned",
+          adminResponse: "Report received.",
+          timeline: [{ label: "Submitted", date: now, actor: "Student" }],
+          internalNotes: [],
+        };
+
+        setReports((r) => [report, ...r]);
+        return report;
+      },
+
+      updateReport: (id, update) => {
+        const now = todayIso();
+
+        setReports((items) =>
+          items.map((r) =>
+            r.id === id ? { ...r, ...update, lastUpdated: now } : r,
+          ),
+        );
+      },
+
+      addInternalNote: (id, note) => {
+        const now = todayIso();
+
+        setReports((items) =>
+          items.map((r) =>
+            r.id === id
+              ? {
+                  ...r,
+                  internalNotes: [
+                    ...r.internalNotes,
+                    {
+                      id: `note-${Date.now()}`,
+                      note,
+                      author: currentUser?.name ?? "Admin",
+                      date: now,
+                    },
+                  ],
+                }
+              : r,
+          ),
+        );
+      },
+
+      markNotificationRead: (id) =>
+        setNotifications((items) =>
+          items.map((n) => (n.id === id ? { ...n, read: true } : n)),
+        ),
+
+      markAllNotificationsRead: (role) =>
+        setNotifications((items) =>
+          items.map((n) => (n.role === role ? { ...n, read: true } : n)),
+        ),
+
+      addResource: (resource) =>
+        setResources((items) => [
+          { ...resource, id: `res-${Date.now()}`, updatedAt: todayIso() },
+          ...items,
+        ]),
+
+      updateResource: (id, update) =>
+        setResources((items) =>
+          items.map((r) =>
+            r.id === id ? { ...r, ...update, updatedAt: todayIso() } : r,
+          ),
+        ),
+
+      deleteResource: (id) =>
+        setResources((items) => items.filter((r) => r.id !== id)),
+    }),
+    [currentUser, reports, resources, notifications, toasts],
+  );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
 export function useApp() {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useApp must be used inside AppProvider');
-  }
-  return context;
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error("useApp must be used inside AppProvider");
+  return ctx;
 }
 
-export const reportStatuses: ReportStatus[] = ['Pending', 'In Review', 'Resolved', 'Closed'];
+export const reportStatuses: ReportStatus[] = [
+  "Pending",
+  "In Review",
+  "Resolved",
+  "Closed",
+];

@@ -1,0 +1,893 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SpeakUp.API.Data;
+using SpeakUp.API.DTOs.Report;
+using SpeakUp.API.Models.ReportModel;
+using SpeakUp.API.Models.UserModel;
+using System.Security.Claims;
+
+namespace SpeakUp.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ReportController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+
+    public ReportController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    // STUDENT: CREATE REPORT
+    [Authorize]
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateReport(CreateReportDto dto)
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim == null) return Unauthorized();
+
+        var userId = int.Parse(claim.Value);
+
+        var report = new Report
+        {
+            Title = dto.Title,
+            Description = dto.Description,
+            StudentId = userId,
+            Status = ReportStatus.Pending,
+
+            ComplainantGender = dto.ComplainantGender,
+            ComplainantStudentId = dto.ComplainantStudentId,
+            Department = dto.Department,
+            ContactNumber = dto.ContactNumber,
+            Email = dto.Email,
+
+            RespondentName = dto.RespondentName,
+            RespondentPosition = dto.RespondentPosition,
+            RespondentDepartment = dto.RespondentDepartment,
+            RelationshipToComplainant = dto.RelationshipToComplainant,
+
+            IncidentDate = dto.IncidentDate,
+            IncidentTime = dto.IncidentTime,
+            IncidentLocation = dto.IncidentLocation,
+
+            ComplaintNature = string.Join(", ", dto.ComplaintNature),
+
+            Witness1Name = dto.Witness1Name,
+            Witness1Contact = dto.Witness1Contact,
+            Witness2Name = dto.Witness2Name,
+            Witness2Contact = dto.Witness2Contact,
+
+            PriorReportWhere = dto.PriorReportWhere,
+            DesiredOutcome = dto.DesiredOutcome,
+            Confidential = dto.Confidential
+        };
+
+        _context.Reports.Add(report);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Report created successfully",
+            report.Id,
+            report.Title,
+            report.Status,
+            report.CreatedAt,
+            report.ComplainantStudentId,
+            report.IncidentDate,
+            report.IncidentLocation
+        });
+    }
+
+    // ADMIN: GET ALL REPORTS
+    [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllReports()
+    {
+        var reports = await _context.Reports
+            .Include(r => r.Student)
+            .Include(r => r.AssignedAdmin)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new
+            {
+                r.Id,
+                r.Title,
+                r.Description,
+                r.Status,
+                r.CreatedAt,
+                r.UpdatedAt,
+
+                r.ComplainantGender,
+                r.ComplainantStudentId,
+                r.Department,
+                r.ContactNumber,
+                r.Email,
+
+                r.RespondentName,
+                r.RespondentPosition,
+                r.RespondentDepartment,
+                r.RelationshipToComplainant,
+
+                r.IncidentDate,
+                r.IncidentTime,
+                r.IncidentLocation,
+
+                ComplaintNature = (r.ComplaintNature ?? "")
+                    .Split(", ", StringSplitOptions.RemoveEmptyEntries),
+
+                r.Witness1Name,
+                r.Witness1Contact,
+                r.Witness2Name,
+                r.Witness2Contact,
+
+                r.PriorReportWhere,
+                r.DesiredOutcome,
+                r.Confidential,
+
+                Student = r.Student == null ? null : new
+                {
+                    r.Student.Id,
+                    r.Student.FirstName,
+                    r.Student.LastName,
+                    r.Student.Email
+                },
+
+                AssignedAdmin = r.AssignedAdmin == null ? null : new
+                {
+                    r.AssignedAdmin.Id,
+                    r.AssignedAdmin.FirstName,
+                    r.AssignedAdmin.LastName
+                }
+            })
+            .ToListAsync();
+
+        return Ok(reports);
+    }
+
+    // ADMIN: CLAIM REPORT
+    [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+    [HttpPost("claim/{reportId}")]
+    public async Task<IActionResult> ClaimReport(int reportId)
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim == null) return Unauthorized();
+
+        var adminId = int.Parse(claim.Value);
+
+        var report = await _context.Reports.FindAsync(reportId);
+        if (report == null) return NotFound("Report not found");
+
+        if (report.AssignedAdminId != null)
+            return BadRequest("Report already assigned");
+
+        report.AssignedAdminId = adminId;
+        report.Status = ReportStatus.InProgress;
+
+        report.LastModifiedById = adminId;
+        report.LastModifiedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Report claimed successfully",
+            report.Id,
+            report.Status,
+            report.AssignedAdminId,
+            report.LastModifiedAt
+        });
+    }
+
+    // ADMIN: UPDATE STATUS
+    [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+    [HttpPut("status/{reportId}")]
+    public async Task<IActionResult> UpdateStatus(int reportId, UpdateStatusDto dto)
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim == null) return Unauthorized();
+
+        var userId = int.Parse(claim.Value);
+
+        var report = await _context.Reports.FindAsync(reportId);
+        if (report == null) return NotFound("Report not found");
+
+        var isSuperAdmin = User.IsInRole("SuperAdmin");
+
+        if (!isSuperAdmin && report.AssignedAdminId != userId)
+            return Forbid("You can only update assigned reports");
+
+        report.Status = dto.Status;
+        report.UpdatedAt = DateTime.UtcNow;
+
+        report.LastModifiedById = userId;
+        report.LastModifiedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Status updated",
+            report.Id,
+            report.Status
+        });
+    }
+
+    // SUPER ADMIN: REASSIGN REPORT
+    [Authorize(Roles = "SuperAdmin")]
+    [HttpPut("reassign/{reportId}")]
+    public async Task<IActionResult> ReassignReport(int reportId, int newAdminId)
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim == null) return Unauthorized();
+
+        var superAdminId = int.Parse(claim.Value);
+
+        var report = await _context.Reports.FindAsync(reportId);
+        if (report == null) return NotFound("Report not found");
+
+        if (report.AssignedAdminId == newAdminId)
+            return BadRequest("Already assigned to this admin");
+
+        var newAdmin = await _context.Users.FindAsync(newAdminId);
+        if (newAdmin == null || newAdmin.Role != UserRole.JuniorAdmin)
+            return BadRequest("Invalid admin selected");
+
+        report.PreviousAdminId = report.AssignedAdminId;
+        report.AssignedAdminId = newAdminId;
+
+        report.ReassignedAt = DateTime.UtcNow;
+        report.LastModifiedById = superAdminId;
+        report.LastModifiedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Report reassigned successfully",
+            from = report.PreviousAdminId,
+            to = report.AssignedAdminId,
+            time = report.ReassignedAt
+        });
+    }
+
+    // STUDENT: GET MY REPORTS
+    [Authorize]
+    [HttpGet("my")]
+    public async Task<IActionResult> GetMyReports()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim == null) return Unauthorized();
+
+        var userId = int.Parse(claim.Value);
+
+        var reports = await _context.Reports
+            .Where(r => r.StudentId == userId)
+            .Include(r => r.AssignedAdmin)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new
+            {
+                r.Id,
+                r.Title,
+                r.Description,
+                r.Status,
+                r.CreatedAt,
+                r.UpdatedAt,
+
+                r.ComplainantGender,
+                r.ComplainantStudentId,
+                r.Department,
+                r.ContactNumber,
+                r.Email,
+
+                r.RespondentName,
+                r.RespondentPosition,
+                r.RespondentDepartment,
+                r.RelationshipToComplainant,
+
+                r.IncidentDate,
+                r.IncidentTime,
+                r.IncidentLocation,
+
+                ComplaintNature = (r.ComplaintNature ?? "")
+                    .Split(", ", StringSplitOptions.RemoveEmptyEntries),
+
+                r.Witness1Name,
+                r.Witness1Contact,
+                r.Witness2Name,
+                r.Witness2Contact,
+
+                r.PriorReportWhere,
+                r.DesiredOutcome,
+                r.Confidential,
+
+                AssignedAdmin = r.AssignedAdmin == null ? null : new
+                {
+                    r.AssignedAdmin.Id,
+                    r.AssignedAdmin.FirstName,
+                    r.AssignedAdmin.LastName
+                }
+            })
+            .ToListAsync();
+
+        return Ok(reports);
+    }
+}
+
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SpeakUp.API.Data;
+using SpeakUp.API.DTOs.Content;
+using SpeakUp.API.Models.ContentModel;
+using System.Security.Claims;
+
+namespace SpeakUp.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class HomePageContentController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+
+    public HomePageContentController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    // ADMIN: CREATE CONTENT
+    [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+    [HttpPost("create")]
+    public async Task<IActionResult> Create(CreateContentDto dto)
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (claim == null)
+            return Unauthorized();
+
+        var userId = int.Parse(claim.Value);
+
+        var content = new HomePageContent
+        {
+            Type = dto.Type,
+            Title = dto.Title,
+            Content = dto.Content,
+            ImageUrl = dto.ImageUrl,
+            StartAt = dto.StartAt,
+            EndAt = dto.EndAt,
+            CreatedById = userId,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.HomePageContents.Add(content);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Content created successfully",
+            content.Id,
+            content.Type,
+            content.Title
+        });
+    }
+
+    // ADMIN: GET ALL CONTENT
+    [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAll()
+    {
+        var content = await _context.HomePageContents
+            .Include(c => c.CreatedBy)
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new HomePageContentDto
+            {
+                Id = c.Id,
+                Type = c.Type,
+                Title = c.Title,
+                Content = c.Content,
+                ImageUrl = c.ImageUrl,
+                CreatedAt = c.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(content);
+    }
+
+    // ADMIN: TOGGLE ACTIVE/INACTIVE
+    [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+    [HttpPut("toggle/{id}")]
+    public async Task<IActionResult> Toggle(int id)
+    {
+        var content = await _context.HomePageContents.FindAsync(id);
+
+        if (content == null)
+            return NotFound("Content not found");
+
+        content.IsActive = !content.IsActive;
+        content.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Content status updated",
+            content.Id,
+            content.IsActive
+        });
+    }
+
+    // STUDENT: GET ACTIVE HOMEPAGE CONTENT
+    [AllowAnonymous]
+    [HttpGet("home")]
+    public async Task<IActionResult> GetHome()
+    {
+        var now = DateTime.UtcNow;
+
+        var content = await _context.HomePageContents
+            .Where(c =>
+                c.IsActive &&
+                (c.StartAt == null || c.StartAt <= now) &&
+                (c.EndAt == null || c.EndAt >= now))
+            .ToListAsync();
+
+        var hero = content
+            .Where(c => c.Type == ContentType.Hero)
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new HomePageContentDto
+            {
+                Id = c.Id,
+                Type = c.Type,
+                Title = c.Title,
+                Content = c.Content,
+                ImageUrl = c.ImageUrl,
+                CreatedAt = c.CreatedAt
+            })
+            .ToList();
+
+        var bulletin = content
+            .Where(c => c.Type == ContentType.Bulletin)
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new HomePageContentDto
+            {
+                Id = c.Id,
+                Type = c.Type,
+                Title = c.Title,
+                Content = c.Content,
+                ImageUrl = c.ImageUrl,
+                CreatedAt = c.CreatedAt
+            })
+            .ToList();
+
+        var safetyTips = content
+            .Where(c => c.Type == ContentType.SafetyTip)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToList();
+
+        var randomSafetyTip = safetyTips
+            .OrderBy(_ => Guid.NewGuid())
+            .Select(c => new HomePageContentDto
+            {
+                Id = c.Id,
+                Type = c.Type,
+                Title = c.Title,
+                Content = c.Content,
+                ImageUrl = c.ImageUrl,
+                CreatedAt = c.CreatedAt
+            })
+            .FirstOrDefault();
+
+        return Ok(new
+        {
+            hero,
+            bulletin,
+            safetyTip = randomSafetyTip
+        });
+    }
+}
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SpeakUp.API.Data;
+using SpeakUp.API.DTOs.Chat;
+using SpeakUp.API.Models.ChatModel;
+using System.Security.Claims;
+
+namespace SpeakUp.API.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ChatMessageController : ControllerBase
+    {
+        private readonly ApplicationDbContext _context;
+
+        public ChatMessageController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        [Authorize]
+        [HttpPost("send")]
+        public async Task<IActionResult> SendMessage(SendMessageDto dto)
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (claim == null)
+                return Unauthorized();
+
+            var userId = int.Parse(claim.Value);
+
+            var conversation = await _context.ChatConversations
+                .FirstOrDefaultAsync(c => c.Id == dto.ConversationId);
+
+            if (conversation == null)
+                return NotFound("Conversation not found");
+
+            // 🔥 SECURITY RULE: only participants can send messages
+            var isParticipant =
+                conversation.StudentId == userId ||
+                conversation.AssignedAdminId == userId;
+
+            if (!isParticipant)
+                return Forbid("You are not part of this conversation");
+
+            var message = new ChatMessage
+            {
+                ChatConversationId = dto.ConversationId,
+                SenderId = userId,
+                Message = dto.Message,
+                SentAt = DateTime.UtcNow,
+                IsRead = false
+            };
+
+            _context.ChatMessages.Add(message);
+
+            conversation.Status = ConversationStatus.Open;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                result = "Message sent",
+                message.Id,
+                message.Message,
+                message.SentAt
+            });
+        }
+
+        [Authorize]
+        [HttpGet("{conversationId}")]
+        public async Task<IActionResult> GetMessages(int conversationId)
+        {
+            var messages = await _context.ChatMessages
+                .Where(m => m.ChatConversationId == conversationId)
+                .Include(m => m.Sender)
+                .OrderBy(m => m.SentAt)
+                .ToListAsync();
+
+            return Ok(messages);
+        }
+
+        [Authorize]
+        [HttpPut("read/{messageId}")]
+        public async Task<IActionResult> MarkAsRead(int messageId)
+        {
+            var message = await _context.ChatMessages.FindAsync(messageId);
+
+            if (message == null)
+                return NotFound();
+
+            message.IsRead = true;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Marked as read" });
+        }
+    }
+}
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SpeakUp.API.Data;
+using SpeakUp.API.DTOs.Chat;
+using SpeakUp.API.Models.ChatModel;
+using SpeakUp.API.Models.UserModel;
+using System.Security.Claims;
+
+namespace SpeakUp.API.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ChatConversationController : ControllerBase
+    {
+        private readonly ApplicationDbContext _context;
+
+        public ChatConversationController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        // CREATE CONVERSATION
+        [Authorize]
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateConversation(CreateConversationDto dto)
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim == null) return Unauthorized();
+
+            var userId = int.Parse(claim.Value);
+
+            // 🔥 CHECK IF CHAT ALREADY EXISTS FOR THIS REPORT
+            if (dto.ReportId != null)
+            {
+                var existingChat = await _context.ChatConversations
+                    .FirstOrDefaultAsync(c => c.ReportId == dto.ReportId);
+
+                if (existingChat != null)
+                {
+                    return BadRequest("Chat already exists for this report");
+                }
+            }
+
+            var conversation = new ChatConversation
+            {
+                ChatType = dto.ChatType,
+                IsAnonymous = dto.IsAnonymous,
+                StudentId = userId,
+                ReportId = dto.ReportId,
+                Status = ConversationStatus.Open,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.ChatConversations.Add(conversation);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Conversation created successfully",
+                conversation.Id,
+                conversation.ChatType,
+                conversation.Status
+            });
+        }
+
+        // USER: GET MY CONVERSATIONS (PAGINATED)
+        [Authorize]
+        [HttpGet("my")]
+        public async Task<IActionResult> GetMyConversations(int page = 1, int pageSize = 10)
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim == null) return Unauthorized();
+
+            var userId = int.Parse(claim.Value);
+
+            var query = _context.ChatConversations
+                .Where(c => c.StudentId == userId || c.AssignedAdminId == userId);
+
+            var totalCount = await query.CountAsync();
+
+            var conversations = await query
+                .Include(c => c.Messages)
+                .OrderByDescending(c => c.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = conversations.Select(c => new ConversationListDto
+            {
+                Id = c.Id,
+                ChatType = c.ChatType.ToString(),
+                Status = c.Status.ToString(),
+                IsAnonymous = c.IsAnonymous,
+                CreatedAt = c.CreatedAt,
+
+                LastMessage = c.Messages
+                    .OrderByDescending(m => m.SentAt)
+                    .Select(m => m.Message)
+                    .FirstOrDefault(),
+
+                LastMessageTime = c.Messages
+                    .OrderByDescending(m => m.SentAt)
+                    .Select(m => m.SentAt)
+                    .FirstOrDefault()
+            }).ToList();
+
+            return Ok(new
+            {
+                items = result,
+                page,
+                pageSize,
+                totalCount
+            });
+        }
+
+        // ADMIN: GET ALL CONVERSATIONS (PAGINATED)
+        [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+        [HttpGet("admin/all")]
+        public async Task<IActionResult> GetAllConversations(int page = 1, int pageSize = 10)
+        {
+            var query = _context.ChatConversations;
+
+            var totalCount = await query.CountAsync();
+
+            var conversations = await query
+                .Include(c => c.Messages)
+                .OrderByDescending(c => c.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = conversations.Select(c => new ConversationListDto
+            {
+                Id = c.Id,
+                ChatType = c.ChatType.ToString(),
+                Status = c.Status.ToString(),
+                IsAnonymous = c.IsAnonymous,
+                CreatedAt = c.CreatedAt,
+
+                LastMessage = c.Messages
+                    .OrderByDescending(m => m.SentAt)
+                    .Select(m => m.Message)
+                    .FirstOrDefault(),
+
+                LastMessageTime = c.Messages
+                    .OrderByDescending(m => m.SentAt)
+                    .Select(m => m.SentAt)
+                    .FirstOrDefault()
+            }).ToList();
+
+            return Ok(new
+            {
+                items = result,
+                page,
+                pageSize,
+                totalCount
+            });
+        }
+
+        // ADMIN: GET UNASSIGNED (QUEUE SYSTEM)
+        [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+        [HttpGet("admin/unassigned")]
+        public async Task<IActionResult> GetUnassigned()
+        {
+            var conversations = await _context.ChatConversations
+                .Where(c => c.AssignedAdminId == null)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            return Ok(conversations);
+        }
+
+        // ADMIN: GET MY ASSIGNED CHATS
+        [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+        [HttpGet("admin/assigned-to-me")]
+        public async Task<IActionResult> GetMyAssignedChats()
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim == null) return Unauthorized();
+
+            var adminId = int.Parse(claim.Value);
+
+            var conversations = await _context.ChatConversations
+                .Where(c => c.AssignedAdminId == adminId)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            return Ok(conversations);
+        }
+
+        // ADMIN: GET CLOSED CHATS
+        [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+        [HttpGet("admin/closed")]
+        public async Task<IActionResult> GetClosedChats()
+        {
+            var conversations = await _context.ChatConversations
+                .Where(c => c.Status == ConversationStatus.Closed)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            return Ok(conversations);
+        }
+
+        // ADMIN: ASSIGN ADMIN
+        [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+        [HttpPut("assign")]
+        public async Task<IActionResult> AssignAdmin(AssignAdminDto dto)
+        {
+            var conversation = await _context.ChatConversations
+                .FirstOrDefaultAsync(c => c.Id == dto.ConversationId);
+
+            if (conversation == null)
+                return NotFound("Conversation not found");
+
+            var admin = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == dto.AdminId);
+
+            if (admin == null)
+                return NotFound("Admin not found");
+
+            if (admin.Role != UserRole.JuniorAdmin && admin.Role != UserRole.SuperAdmin)
+                return BadRequest("User is not an admin");
+
+            if (conversation.AssignedAdminId == dto.AdminId)
+                return BadRequest("Already assigned to this admin");
+
+            conversation.PreviousAdminId = conversation.AssignedAdminId;
+            conversation.AssignedAdminId = dto.AdminId;
+            conversation.Status = ConversationStatus.Open;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Admin assigned successfully",
+                conversation.Id,
+                conversation.AssignedAdminId
+            });
+        }
+
+        [Authorize]
+        [HttpGet("by-report/{reportId}")]
+        public async Task<IActionResult> GetChatByReport(int reportId)
+        {
+            var conversation = await _context.ChatConversations
+                .Include(c => c.Messages)
+                .FirstOrDefaultAsync(c => c.ReportId == reportId);
+
+            if (conversation == null)
+                return NotFound("No chat found for this report");
+
+            var result = new
+            {
+                conversation.Id,
+                conversation.ChatType,
+                conversation.Status,
+                conversation.IsAnonymous,
+                conversation.CreatedAt,
+                conversation.ClosedAt,
+
+                Messages = conversation.Messages
+                    .OrderBy(m => m.SentAt)
+                    .Select(m => new
+                    {
+                        m.Id,
+                        m.Message,
+                        m.SenderId,
+                        m.SentAt,
+                        m.IsRead
+                    })
+            };
+
+            return Ok(result);
+        }
+
+        // ADMIN: CLOSE CONVERSATION
+        [Authorize(Roles = "JuniorAdmin,SuperAdmin")]
+        [HttpPut("close/{conversationId}")]
+        public async Task<IActionResult> CloseConversation(int conversationId)
+        {
+            var conversation = await _context.ChatConversations
+                .FirstOrDefaultAsync(c => c.Id == conversationId);
+
+            if (conversation == null)
+                return NotFound("Conversation not found");
+
+            if (conversation.Status == ConversationStatus.Closed)
+                return BadRequest("Conversation is already closed");
+
+            conversation.Status = ConversationStatus.Closed;
+            conversation.ClosedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Conversation closed successfully",
+                conversation.Id,
+                conversation.Status,
+                conversation.ClosedAt
+            });
+        }
+    }
+}
