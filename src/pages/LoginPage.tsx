@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { isAdminRole } from "../utils/auth";
+import type { Role } from "../types";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -18,15 +18,17 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      const savedUser = localStorage.getItem("user");
-      const role = savedUser
-        ? JSON.parse(savedUser).role?.toLowerCase()
-        : "student";
+      const { role } = await login(email, password);
 
-      navigate(isAdminRole(role) ? "/admin/dashboard" : "/student/dashboard");
+      if (role === "SuperAdmin" || role === "JuniorAdmin") {
+        console.log("NAVIGATING TO ADMIN");
+        navigate("/admin/dashboard");
+      } else {
+        console.log("NAVIGATING TO STUDENT");
+        navigate("/student/home");
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data || err.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -44,38 +46,34 @@ export default function LoginPage() {
         </p>
 
         {error && (
-          <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">
+          <div className="bg-red-100 text-red-700 text-sm p-3 rounded mb-4">
             {error}
           </div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="text-sm text-gray-700">Email</label>
-            <input
-              type="email"
-              className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-institution-600"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg"
+            required
+          />
 
-          <div>
-            <label className="text-sm text-gray-700">Password</label>
-            <input
-              type="password"
-              className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-institution-600"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg"
+            required
+          />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-institution-600 text-white py-2 rounded-lg hover:bg-institution-700 transition disabled:opacity-50"
+            className="w-full bg-institution-600 text-white py-2 rounded-lg disabled:opacity-50"
           >
             {loading ? "Logging in..." : "Login"}
           </button>

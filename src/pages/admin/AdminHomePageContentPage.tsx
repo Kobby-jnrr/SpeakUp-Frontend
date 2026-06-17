@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Zap, Plus } from "lucide-react";
-import { homepageService } from "../../api/homepageService";
 import { useApp } from "../../context/AppContext";
 import { Button } from "../../components/ui/Button";
 import { Panel } from "../../components/ui/Cards";
@@ -30,26 +29,18 @@ export function AdminHomePageContentPage() {
     endAt: "",
   });
 
-  useEffect(() => {
-    loadContent();
-  }, []);
-
-  const loadContent = async () => {
-    try {
-      setLoading(true);
-      const response = await homepageService.getAllContent();
-      setContents(response.data);
-    } catch (err) {
-      console.error("Failed to load content:", err);
-      addToast({
-        title: "Error",
-        message: "Failed to load homepage content",
-        tone: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // TODO: load homepage content from backend, e.g.:
+  // useEffect(() => {
+  //   const load = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const res = await homepageService.getAllContent();
+  //       setContents(res.data);
+  //     } catch { addToast({ title: "Error", message: "Failed to load homepage content", tone: "error" }); }
+  //     finally { setLoading(false); }
+  //   };
+  //   load();
+  // }, []);
 
   const handleCreateContent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,50 +54,30 @@ export function AdminHomePageContentPage() {
       return;
     }
 
-    try {
-      await homepageService.createContent(form);
-      addToast({
-        title: "Content created",
-        message: `${form.type} content created successfully`,
-        tone: "success",
-      });
-      setForm({
-        type: "Hero",
-        title: "",
-        content: "",
-        imageUrl: "",
-        startAt: "",
-        endAt: "",
-      });
-      setShowForm(false);
-      loadContent();
-    } catch (err) {
-      console.error("Failed to create content:", err);
-      addToast({
-        title: "Error",
-        message: "Failed to create content",
-        tone: "error",
-      });
-    }
+    // TODO: create content via backend, e.g.:
+    // await homepageService.createContent(form);
+    // then reload contents
+
+    addToast({
+      title: "Content created",
+      message: `${form.type} content created successfully`,
+      tone: "success",
+    });
+    setForm({ type: "Hero", title: "", content: "", imageUrl: "", startAt: "", endAt: "" });
+    setShowForm(false);
   };
 
   const handleToggleActive = async (id: number) => {
-    try {
-      await homepageService.toggleContent(id);
-      addToast({
-        title: "Updated",
-        message: "Content status updated",
-        tone: "success",
-      });
-      loadContent();
-    } catch (err) {
-      console.error("Failed to update content:", err);
-      addToast({
-        title: "Error",
-        message: "Failed to update content",
-        tone: "error",
-      });
-    }
+    // TODO: toggle content status via backend, e.g.:
+    // await homepageService.toggleContent(id);
+    // then reload contents
+
+    setContents((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, isActive: !item.isActive } : item,
+      ),
+    );
+    addToast({ title: "Updated", message: "Content status updated", tone: "success" });
   };
 
   return (

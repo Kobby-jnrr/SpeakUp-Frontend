@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import { authService } from "../api/authService";
 
 export default function SignupPage() {
   const navigate = useNavigate();
-  const { register } = useApp();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -20,10 +19,7 @@ export default function SignupPage() {
   const [success, setSuccess] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,7 +36,7 @@ export default function SignupPage() {
     try {
       setLoading(true);
 
-      await register({
+      const res = await authService.register({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -48,13 +44,15 @@ export default function SignupPage() {
         password: formData.password,
       });
 
-      setSuccess("Account created successfully");
+      console.log("REGISTER RESPONSE:", res.data);
+
+      setSuccess("Account created successfully!");
 
       setTimeout(() => {
         navigate("/login");
-      }, 1500);
+      }, 1000);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Registration failed");
+      setError(err.response?.data || err.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -72,96 +70,62 @@ export default function SignupPage() {
         </p>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
+          <div className="bg-red-100 text-red-700 text-sm p-3 rounded mb-4">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="bg-green-50 text-green-600 p-3 rounded-lg mb-4 text-sm">
+          <div className="bg-green-100 text-green-700 text-sm p-3 rounded mb-4">
             {success}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-700">First Name</label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                required
-                className="w-full mt-1 px-4 py-2 border rounded-lg"
-              />
-            </div>
+          <input
+            name="firstName"
+            placeholder="First Name"
+            onChange={handleChange}
+            className="w-full px-4 py-2 border rounded-lg"
+          />
+          <input
+            name="lastName"
+            placeholder="Last Name"
+            onChange={handleChange}
+            className="w-full px-4 py-2 border rounded-lg"
+          />
+          <input
+            name="email"
+            placeholder="Email"
+            onChange={handleChange}
+            className="w-full px-4 py-2 border rounded-lg"
+          />
+          <input
+            name="phoneNumber"
+            placeholder="Phone Number"
+            onChange={handleChange}
+            className="w-full px-4 py-2 border rounded-lg"
+          />
 
-            <div>
-              <label className="text-sm text-gray-700">Last Name</label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                required
-                className="w-full mt-1 px-4 py-2 border rounded-lg"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-700">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 px-4 py-2 border rounded-lg"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-700">Phone Number</label>
-            <input
-              type="text"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 px-4 py-2 border rounded-lg"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-700">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 px-4 py-2 border rounded-lg"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-700">Confirm Password</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 px-4 py-2 border rounded-lg"
-            />
-          </div>
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            onChange={handleChange}
+            className="w-full px-4 py-2 border rounded-lg"
+          />
+          <input
+            name="confirmPassword"
+            type="password"
+            placeholder="Confirm Password"
+            onChange={handleChange}
+            className="w-full px-4 py-2 border rounded-lg"
+          />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-institution-600 text-white py-2 rounded-lg hover:bg-institution-700 transition disabled:opacity-50"
+            className="w-full bg-institution-600 text-white py-2 rounded-lg disabled:opacity-50"
           >
             {loading ? "Creating Account..." : "Sign Up"}
           </button>

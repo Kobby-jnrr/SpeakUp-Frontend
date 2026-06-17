@@ -10,62 +10,46 @@ import {
   Shield,
   ShieldAlert,
   PhoneCall,
-  ChevronRight,
   Hand,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
-import { getDashboardStats } from "../../mock/dashboardStats";
 
-import { Panel } from "../../components/ui/Cards";
+import { Panel, DashboardCard } from "../../components/ui/Cards";
 import { Button } from "../../components/ui/Button";
-import { DashboardCard } from "../../components/ui/Cards";
 import { formatDate } from "../../utils/format";
 
 export function StudentDashboard() {
   const { currentUser, reports, notifications, resources } = useApp();
 
-  const stats = getDashboardStats(reports);
+  // ========================
+  // STATS
+  // ========================
+  const stats = {
+    totalReports: reports.length,
+    pendingReports: reports.filter((r) => r.status === "Pending").length,
+    inReviewReports: reports.filter((r) => r.status === "In Review").length,
+    resolvedReports: reports.filter((r) => r.status === "Resolved").length,
+    emergencyReports: reports.filter((r) => r.urgency === "Emergency").length,
+  };
+
+  // ========================
+  // HELPERS (FIX TYPE ISSUE)
+  // ========================
+  const isStudentNotification = (role: any) =>
+    (role ?? "").toLowerCase?.() === "student";
 
   const unread = notifications.filter(
-    (n) => n.role === "student" && !n.read,
+    (n) => isStudentNotification(n.role) && !n.read,
   ).length;
 
   const publishedResources = resources.filter((r) => r.published);
   const recentReports = reports.slice(0, 5);
 
-  const quickActions = [
-    {
-      title: "Submit a New Report",
-      detail: "Report an incident",
-      to: "/student/report",
-      icon: FilePlus,
-      tone: "bg-blue-50 text-blue-700 border-blue-100",
-    },
-    {
-      title: "View My Reports",
-      detail: "Track your reports",
-      to: "/student/my-reports",
-      icon: Files,
-      tone: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    },
-    {
-      title: "Emergency Help",
-      detail: "Get immediate support",
-      to: "/student/emergency",
-      icon: AlertTriangle,
-      tone: "bg-red-50 text-red-700 border-red-100",
-    },
-    {
-      title: "Browse Resources",
-      detail: "Helpful information",
-      to: "/student/resources",
-      icon: BookOpen,
-      tone: "bg-violet-50 text-violet-700 border-violet-100",
-    },
-  ];
-
+  // ========================
+  // CONTACTS
+  // ========================
   const contacts = [
     {
       title: "Campus Security",
@@ -92,13 +76,13 @@ export function StudentDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
+      {/* ================= HEADER ================= */}
       <div className="grid gap-5 xl:grid-cols-[1fr_250px]">
         <div className="rounded-md border bg-white p-6">
           <div className="grid lg:grid-cols-[1fr_240px] gap-5">
             <div>
               <h1 className="text-3xl font-bold flex items-center gap-2">
-                Welcome back, {currentUser?.name?.split(" ")[0]}
+                Welcome back, {currentUser?.firstName}
                 <Hand className="h-6 w-6 text-amber-500" />
               </h1>
 
@@ -135,14 +119,14 @@ export function StudentDashboard() {
         </div>
       </div>
 
-      {/* STATS */}
+      {/* ================= STATS ================= */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <DashboardCard
           title="Total Reports"
           value={stats.totalReports}
           detail="All time"
           icon={<Files />}
-          accent="bg-blue-500"
+          variant="info"
         />
 
         <DashboardCard
@@ -150,7 +134,7 @@ export function StudentDashboard() {
           value={stats.pendingReports}
           detail="Awaiting review"
           icon={<Clock3 />}
-          accent="bg-amber-500"
+          variant="pending"
         />
 
         <DashboardCard
@@ -158,7 +142,7 @@ export function StudentDashboard() {
           value={stats.inReviewReports}
           detail="Processing"
           icon={<Activity />}
-          accent="bg-violet-500"
+          variant="review"
         />
 
         <DashboardCard
@@ -166,7 +150,7 @@ export function StudentDashboard() {
           value={stats.resolvedReports}
           detail="Completed"
           icon={<CheckCircle2 />}
-          accent="bg-emerald-500"
+          variant="success"
         />
 
         <DashboardCard
@@ -174,13 +158,13 @@ export function StudentDashboard() {
           value={stats.emergencyReports}
           detail="High priority"
           icon={<ShieldAlert />}
-          accent="bg-red-500"
+          variant="danger"
         />
       </div>
 
-      {/* MAIN CONTENT */}
-      <div className="grid gap-5 xl:grid-cols-[1fr_320px_320px]">
-        {/* REPORTS TABLE */}
+      {/* ================= MAIN CONTENT ================= */}
+      <div className="grid gap-5 xl:grid-cols-[1fr_320px]">
+        {/* REPORTS */}
         <Panel className="p-0">
           <div className="border-b px-5 py-4 flex justify-between">
             <h2 className="font-bold">Recent Reports</h2>
@@ -202,35 +186,25 @@ export function StudentDashboard() {
               </thead>
 
               <tbody>
-                {recentReports.map((r) => (
-                  <tr key={r.id} className="border-t">
-                    <td className="p-3">{r.id}</td>
-                    <td className="p-3">{r.type}</td>
-                    <td className="p-3">{r.status}</td>
-                    <td className="p-3">{formatDate(r.submittedAt)}</td>
-                    <td className="p-3">{formatDate(r.lastUpdated)}</td>
+                {recentReports.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-3 text-center text-slate-500">
+                      No reports yet.
+                    </td>
                   </tr>
-                ))}
+                ) : (
+                  recentReports.map((r) => (
+                    <tr key={r.id} className="border-t">
+                      <td className="p-3">{r.id}</td>
+                      <td className="p-3">{r.type}</td>
+                      <td className="p-3">{r.status}</td>
+                      <td className="p-3">{formatDate(r.submittedAt)}</td>
+                      <td className="p-3">{formatDate(r.lastUpdated)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-          </div>
-        </Panel>
-
-        {/* QUICK ACTIONS */}
-        <Panel>
-          <h2 className="font-bold">Quick Actions</h2>
-
-          <div className="mt-4 space-y-3">
-            {quickActions.map((a) => (
-              <Link
-                key={a.title}
-                to={a.to}
-                className={`block p-3 border rounded ${a.tone}`}
-              >
-                <p className="font-bold text-sm">{a.title}</p>
-                <p className="text-xs opacity-80">{a.detail}</p>
-              </Link>
-            ))}
           </div>
         </Panel>
 

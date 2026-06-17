@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { MessageSquare, Plus } from "lucide-react";
-import { chatConversationService } from "../../api/chatConversationService";
 import { ChatConversationList } from "../../components/chat/ChatConversationList";
 import { ChatWindow } from "../../components/chat/ChatWindow";
 import { Button } from "../../components/ui/Button";
@@ -26,22 +25,23 @@ export function StudentChatPage() {
     setCreating(true);
 
     try {
-      const response = await chatConversationService.createConversation({
-        chatType: newChat.chatType,
-        isAnonymous: newChat.isAnonymous,
-        reportId: newChat.reportId ? Number(newChat.reportId) : null,
-      });
-      const id = response.data.id ?? response.data.Id;
-      setSelectedConversationId(Number(id));
-      setShowNewChatForm(false);
-      setNewChat({ chatType: "General", reportId: "", isAnonymous: false });
-      addToast({ title: "Conversation started", tone: "success" });
+      // TODO: create conversation via backend, e.g.:
+      // const res = await chatConversationService.createConversation({
+      //   chatType: newChat.chatType,
+      //   isAnonymous: newChat.isAnonymous,
+      //   reportId: newChat.reportId ? Number(newChat.reportId) : null,
+      // });
+      // const id = res.data.id ?? res.data.Id;
+      // setSelectedConversationId(Number(id));
+
+      throw new Error("Chat not yet connected to backend");
     } catch (error: any) {
       addToast({
         title: "Could not start chat",
         message:
           error.response?.data?.message ||
           error.response?.data ||
+          error.message ||
           "Please try again.",
         tone: "error",
       });

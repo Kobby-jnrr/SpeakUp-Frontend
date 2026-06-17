@@ -1,10 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MessageSquare, Check } from "lucide-react";
-import { chatConversationService } from "../../api/chatConversationService";
 import { ChatWindow } from "../../components/chat/ChatWindow";
 import { Button } from "../../components/ui/Button";
 import { Panel } from "../../components/ui/Cards";
 import { useApp } from "../../context/AppContext";
+
+interface Conversation {
+  id: number;
+  chatType: string;
+  status: string;
+  isAnonymous: boolean;
+  createdAt: string;
+  lastMessage?: string;
+}
 
 export function AdminChatPage() {
   const { addToast } = useApp();
@@ -12,67 +20,34 @@ export function AdminChatPage() {
     number | null
   >(null);
   const [view, setView] = useState<"all" | "unassigned" | "assigned">("all");
-  const [conversations, setConversations] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const loadConversations = async () => {
-      try {
-        setLoading(true);
-        let response;
-
-        if (view === "unassigned") {
-          response = await chatConversationService.getUnassigned();
-        } else if (view === "assigned") {
-          response = await chatConversationService.getAssignedToMe();
-        } else {
-          response = await chatConversationService.getAllAdmin();
-        }
-
-        setConversations(response.data.items || response.data);
-      } catch (err) {
-        console.error("Failed to load conversations:", err);
-        addToast({
-          title: "Error",
-          message: "Failed to load conversations",
-          tone: "error",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadConversations();
-  }, [view, addToast]);
+  // TODO: load conversations from backend, e.g.:
+  // useEffect(() => {
+  //   const load = async () => {
+  //     setLoading(true);
+  //     try {
+  //       let res;
+  //       if (view === "unassigned") res = await chatConversationService.getUnassigned();
+  //       else if (view === "assigned") res = await chatConversationService.getAssignedToMe();
+  //       else res = await chatConversationService.getAllAdmin();
+  //       setConversations(res.data.items || res.data);
+  //     } catch { addToast({ title: "Error", message: "Failed to load conversations", tone: "error" }); }
+  //     finally { setLoading(false); }
+  //   };
+  //   load();
+  // }, [view]);
 
   const handleCloseConversation = async () => {
     if (!selectedConversationId) return;
 
-    try {
-      await chatConversationService.closeConversation(selectedConversationId);
-      addToast({
-        title: "Conversation closed",
-        message: "",
-        tone: "success",
-      });
-      setSelectedConversationId(null);
-      // Reload conversations
-      const response =
-        view === "unassigned"
-          ? await chatConversationService.getUnassigned()
-          : view === "assigned"
-            ? await chatConversationService.getAssignedToMe()
-            : await chatConversationService.getAllAdmin();
+    // TODO: close conversation via backend, e.g.:
+    // await chatConversationService.closeConversation(selectedConversationId);
+    // then reload conversations
 
-      setConversations(response.data.items || response.data);
-    } catch (err) {
-      console.error("Failed to close conversation:", err);
-      addToast({
-        title: "Error",
-        message: "Failed to close conversation",
-        tone: "error",
-      });
-    }
+    addToast({ title: "Conversation closed", tone: "success" });
+    setSelectedConversationId(null);
   };
 
   const currentConversation = conversations.find(

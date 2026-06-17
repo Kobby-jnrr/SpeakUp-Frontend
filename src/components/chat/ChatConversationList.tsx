@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { chatConversationService } from "../../api/chatConversationService";
+import { useState } from "react";
 import { Panel } from "../ui/Cards";
 
 interface Conversation {
@@ -24,40 +23,30 @@ export function ChatConversationList({
   adminMode = false,
 }: ChatConversationListProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const loadConversations = async () => {
-      try {
-        setLoading(true);
-        let response;
-
-        if (adminMode) {
-          response = await chatConversationService.getAllAdmin();
-        } else {
-          response = await chatConversationService.getMyConversations();
-        }
-
-        setConversations(response.data.items || response.data);
-      } catch (err) {
-        console.error("Failed to load conversations:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadConversations();
-  }, [adminMode]);
+  // TODO: load conversations from backend, e.g.:
+  // useEffect(() => {
+  //   const load = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const res = adminMode
+  //         ? await chatConversationService.getAllAdmin()
+  //         : await chatConversationService.getMyConversations();
+  //       setConversations(res.data.items || res.data);
+  //     } catch (err) { console.error("Failed to load conversations:", err); }
+  //     finally { setLoading(false); }
+  //   };
+  //   load();
+  // }, [adminMode]);
 
   if (loading) {
-    return <Panel>Loading conversations...</Panel>;
+    return <p className="text-slate-600 text-sm">Loading conversations...</p>;
   }
 
   if (conversations.length === 0) {
     return (
-      <Panel>
-        <p className="text-center text-slate-600 py-8">No conversations yet</p>
-      </Panel>
+      <p className="text-center text-slate-600 py-8">No conversations yet</p>
     );
   }
 

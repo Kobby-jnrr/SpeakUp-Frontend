@@ -1,7 +1,6 @@
 import { Upload } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { reportService } from "../../api/reportService";
 import { useApp } from "../../context/AppContext";
 import { Button } from "../ui/Button";
 import { Panel } from "../ui/Cards";
@@ -147,43 +146,41 @@ export function ReportForm() {
         : item,
     );
 
-    try {
-      const response = await reportService.createReport({
-        title: `Sexual Harassment Complaint - ${form.fullName}`,
-        description: form.description,
-        complainantGender: form.complainantGender,
-        complainantStudentId: form.complainantStudentId,
-        department: form.department,
-        contactNumber: form.contactNumber,
-        email: form.email,
-        respondentName: form.respondentName,
-        respondentPosition: form.respondentPosition,
-        respondentDepartment: form.respondentDepartment,
-        relationshipToComplainant: form.relationshipToComplainant,
-        incidentDate: form.incidentDate,
-        incidentTime: form.incidentTime || "Not specified",
-        incidentLocation: form.incidentLocation,
-        complaintNature,
-        witness1Name: form.witness1Name,
-        witness1Contact: form.witness1Contact,
-        witness2Name: form.witness2Name,
-        witness2Contact: form.witness2Contact,
-        priorReportWhere:
-          form.reportedBefore === "Yes" ? form.priorReportWhere : "No",
-        desiredOutcome: form.desiredOutcome,
-        confidential: form.confidential,
-      });
+    // TODO: connect to backend — call reportService.createReport with this payload:
+    // const payload = {
+    //   title: `Sexual Harassment Complaint - ${form.fullName}`,
+    //   description: form.description,
+    //   complainantGender: form.complainantGender,
+    //   complainantStudentId: form.complainantStudentId,
+    //   department: form.department,
+    //   contactNumber: form.contactNumber,
+    //   email: form.email,
+    //   respondentName: form.respondentName,
+    //   respondentPosition: form.respondentPosition,
+    //   respondentDepartment: form.respondentDepartment,
+    //   relationshipToComplainant: form.relationshipToComplainant,
+    //   incidentDate: form.incidentDate,
+    //   incidentTime: form.incidentTime || "Not specified",
+    //   incidentLocation: form.incidentLocation,
+    //   complaintNature,
+    //   witness1Name: form.witness1Name,
+    //   witness1Contact: form.witness1Contact,
+    //   witness2Name: form.witness2Name,
+    //   witness2Contact: form.witness2Contact,
+    //   priorReportWhere: form.reportedBefore === "Yes" ? form.priorReportWhere : "No",
+    //   desiredOutcome: form.desiredOutcome,
+    //   confidential: form.confidential,
+    // };
+    // const response = await reportService.createReport(payload);
+    // addToast({ title: "Report submitted", message: `Report ${response.data.id} created successfully.`, tone: "success" });
+    // navigate("/student/my-reports");
 
-      addToast({
-        title: "Report submitted",
-        message: `Report ${response.data.id} created successfully.`,
-        tone: "success",
-      });
-      navigate("/student/my-reports");
+    try {
+      throw new Error("Report submission not yet connected to backend");
     } catch (err: any) {
       addToast({
         title: "Submission failed",
-        message: err.response?.data?.message || "Could not submit report",
+        message: err.response?.data?.message || err.message || "Could not submit report",
         tone: "error",
       });
     } finally {

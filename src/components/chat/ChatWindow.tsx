@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Send } from "lucide-react";
-import { chatMessageService } from "../../api/chatMessageService";
 import { useApp } from "../../context/AppContext";
 import { Panel } from "../ui/Cards";
 
@@ -21,55 +20,36 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const { currentUser, addToast } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        setLoading(true);
-        const response = await chatMessageService.getMessages(conversationId);
-        setMessages(response.data);
-      } catch (err) {
-        console.error("Failed to load messages:", err);
-        addToast({
-          title: "Error",
-          message: "Could not load messages",
-          tone: "error",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMessages();
-    const interval = setInterval(loadMessages, 3000);
-    return () => clearInterval(interval);
-  }, [conversationId, addToast]);
+  // TODO: load messages from backend, e.g.:
+  // useEffect(() => {
+  //   const load = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const res = await chatMessageService.getMessages(conversationId);
+  //       setMessages(res.data);
+  //     } catch { addToast({ title: "Error", message: "Could not load messages", tone: "error" }); }
+  //     finally { setLoading(false); }
+  //   };
+  //   load();
+  //   const interval = setInterval(load, 3000);
+  //   return () => clearInterval(interval);
+  // }, [conversationId]);
 
   const handleSend = async () => {
     if (!newMessage.trim()) return;
 
     setSending(true);
     try {
-      await chatMessageService.sendMessage({
-        conversationId,
-        message: newMessage,
-      });
+      // TODO: send message via backend, e.g.:
+      // await chatMessageService.sendMessage({ conversationId, message: newMessage });
+      // const res = await chatMessageService.getMessages(conversationId);
+      // setMessages(res.data);
 
-      setNewMessage("");
-
-      // Reload messages
-      const response = await chatMessageService.getMessages(conversationId);
-      setMessages(response.data);
-
-      addToast({
-        title: "Message sent",
-        message: "",
-        tone: "success",
-      });
+      throw new Error("Chat messaging not yet connected to backend");
     } catch (err) {
-      console.error("Failed to send message:", err);
       addToast({
         title: "Failed to send",
         message: "Could not send your message",

@@ -1,4 +1,4 @@
-export type Role = "student" | "junioradmin" | "superadmin";
+export type Role = "Student" | "JuniorAdmin" | "SuperAdmin";
 
 export type ReportStatus = "Pending" | "In Review" | "Resolved" | "Closed";
 
@@ -15,31 +15,15 @@ export type AbuseType =
 
 export interface User {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: Role;
-  backendRole?: string;
-  studentId?: string;
-  department?: string;
-  title?: string;
-}
-
-export interface TimelineItem {
-  label: string;
-  date: string;
-  actor: string;
-}
-
-export interface InternalNote {
-  id: string;
-  note: string;
-  author: string;
-  date: string;
 }
 
 export interface NotificationItem {
   id: string;
-  role: "student" | "admin";
+  role: Role;
   title: string;
   message: string;
   date: string;
@@ -58,36 +42,33 @@ export interface Resource {
   contact?: string;
 }
 
-export interface DashboardStats {
-  totalReports: number;
-  pendingReports: number;
-  inReviewReports: number;
-  resolvedReports: number;
-  emergencyReports: number;
-  anonymousReports: number;
-  reportsThisWeek: number;
-  reportsThisMonth: number;
+export interface TimelineItem {
+  label: string;
+  date: string;
+  actor: string;
+}
+
+export interface InternalNote {
+  id: string;
+  note: string;
+  author: string;
+  date: string;
 }
 
 export interface Report {
-  // core identity
   id: string;
   studentName: string;
   studentId: string | null;
   studentEmail?: string;
-  complainantGender?: string;
   department?: string;
-  contactNumber?: string;
   isAnonymous: boolean;
 
   type: AbuseType;
-  complaintNature?: string[];
   status: ReportStatus;
   urgency: Urgency;
 
   location: string;
   incidentDate: string;
-  incidentTime?: string;
 
   description: string;
 
@@ -96,26 +77,10 @@ export interface Report {
 
   accusedPerson: string;
 
-  respondentName?: string;
-  respondentPosition?: string;
-  respondentDepartment?: string;
-  relationship?: string;
-
-  witness1Name?: string;
-  witness1Contact?: string;
-  witness2Name?: string;
-  witness2Contact?: string;
-
-  contactPreference: string;
-  confidential?: boolean;
-  priorReportWhere?: string;
-  desiredOutcome?: string;
-
-  evidence: string[];
-  evidenceDescription?: string;
-
   assignedCounselor: string;
   adminResponse: string;
+
+  evidence: string[];
 
   timeline: TimelineItem[];
   internalNotes: InternalNote[];

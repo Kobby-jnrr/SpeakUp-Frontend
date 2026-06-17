@@ -1,11 +1,8 @@
 import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-
 import { AdminLayout } from "./components/layout/AdminLayout";
-import { SuperAdminLayout } from "./components/layout/SuperAdminLayout";
 import { StudentLayout } from "./components/layout/StudentLayout";
-import { ProtectedRouteMock } from "./components/layout/ProtectedRouteMock";
-
+import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { ToastViewport } from "./components/ui/Toast";
 
 // ================= ADMIN PAGES =================
@@ -47,33 +44,20 @@ import SignupPage from "./pages/SignupPage";
 // ================= SHELLS =================
 function StudentShell({ children }: { children: ReactNode }) {
   return (
-    <ProtectedRouteMock role="student">
+    <ProtectedRoute role="Student">
       <StudentLayout>{children}</StudentLayout>
-    </ProtectedRouteMock>
+    </ProtectedRoute>
   );
 }
 
-// Junior admin uses NORMAL admin layout
 function JuniorAdminShell({ children }: { children: ReactNode }) {
   return (
-    <ProtectedRouteMock role="junioradmin">
+    <ProtectedRoute role="JuniorAdmin">
       <AdminLayout>{children}</AdminLayout>
-    </ProtectedRouteMock>
+    </ProtectedRoute>
   );
 }
 
-// SUPER ADMIN uses SUPER layout (dark + premium UI)
-function SuperAdminShell({ children }: { children: ReactNode }) {
-  return (
-    <ProtectedRouteMock role="superadmin">
-      <SuperAdminLayout>{children}</SuperAdminLayout>
-    </ProtectedRouteMock>
-  );
-}
-
-// ========================================================
-// ROUTES
-// ========================================================
 export default function App() {
   return (
     <>
@@ -298,9 +282,11 @@ export default function App() {
         <Route
           path="/admin/create-junior-admin"
           element={
-            <SuperAdminShell>
-              <CreateJuniorAdminPage />
-            </SuperAdminShell>
+            <ProtectedRoute role="SuperAdmin">
+              <AdminLayout>
+                <CreateJuniorAdminPage />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
 

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { RoleSwitcher } from "./RoleSwitcher";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -13,7 +12,21 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <Link to="/" className="text-base font-bold text-institution-900">
             SpeakUp Portal
           </Link>
-          <RoleSwitcher />
+          <div className="flex gap-2">
+            <Link
+              to="/login"
+              className="text-sm font-medium text-institution-700 hover:text-institution-900 transition"
+            >
+              Login
+            </Link>
+            <span className="text-slate-300">|</span>
+            <Link
+              to="/register"
+              className="text-sm font-medium text-institution-700 hover:text-institution-900 transition"
+            >
+              Sign Up
+            </Link>
+          </div>
         </div>
       </header>
       <main id="main" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

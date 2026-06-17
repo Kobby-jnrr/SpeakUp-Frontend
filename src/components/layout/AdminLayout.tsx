@@ -11,21 +11,12 @@ import {
   Zap,
   ChevronLeft,
   ChevronRight,
+  UserPlus,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { Button } from "../ui/Button";
-
-const links = [
-  { to: "/admin/dashboard", label: "Dashboard", icon: Home },
-  { to: "/admin/reports", label: "Reports", icon: FileText },
-  { to: "/admin/chat", label: "Chat", icon: MessageSquare },
-  { to: "/admin/homepage-content", label: "Homepage Content", icon: Zap },
-  { to: "/admin/resources", label: "Resources", icon: Wrench },
-  { to: "/admin/notifications", label: "Notifications", icon: Bell },
-  { to: "/admin/settings", label: "Settings", icon: Settings },
-];
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -33,6 +24,27 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
   const { currentUser, logout } = useApp();
   const navigate = useNavigate();
+
+  const links = [
+    { to: "/admin/dashboard", label: "Dashboard", icon: Home },
+    { to: "/admin/reports", label: "Reports", icon: FileText },
+    { to: "/admin/chat", label: "Chat", icon: MessageSquare },
+    { to: "/admin/homepage-content", label: "Homepage Content", icon: Zap },
+    { to: "/admin/resources", label: "Resources", icon: Wrench },
+    { to: "/admin/notifications", label: "Notifications", icon: Bell },
+    { to: "/admin/settings", label: "Settings", icon: Settings },
+
+    // ✅ SUPER ADMIN ONLY
+    ...(currentUser?.role === "SuperAdmin"
+      ? [
+          {
+            to: "/admin/create-junior-admin",
+            label: "Create Admin",
+            icon: UserPlus,
+          },
+        ]
+      : []),
+  ];
 
   const renderLink = ({
     to,
@@ -58,9 +70,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       }
     >
       <span
-        className={`flex items-center ${
-          collapsed ? "justify-center" : "gap-3"
-        }`}
+        className={`flex items-center ${collapsed ? "justify-center" : "gap-3"}`}
       >
         <Icon className="h-4 w-4 shrink-0" />
         {!collapsed && <span>{label}</span>}
@@ -74,7 +84,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       bg-[#082642] py-5 text-white transition-all
       ${collapsed ? "w-[72px] items-center px-2" : "w-[260px] px-4"}`}
     >
-      {/* Header */}
       <div
         className={`flex items-center ${
           collapsed ? "justify-center" : "justify-between"
@@ -94,48 +103,41 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         </div>
 
         {!collapsed && (
-          <button
-            onClick={() => setCollapsed(true)}
-            className="rounded-md p-1.5 text-blue-100/70 hover:bg-white/10 hover:text-white"
-          >
+          <button onClick={() => setCollapsed(true)}>
             <ChevronLeft className="h-4 w-4" />
           </button>
         )}
       </div>
 
       {collapsed && (
-        <button
-          onClick={() => setCollapsed(false)}
-          className="mt-4 flex h-9 w-9 items-center justify-center rounded-md text-blue-100/70 hover:bg-white/10 hover:text-white"
-        >
+        <button onClick={() => setCollapsed(false)} className="mt-4">
           <ChevronRight className="h-4 w-4" />
         </button>
       )}
 
-      {/* Navigation */}
       <nav className="mt-8 space-y-2">{links.map(renderLink)}</nav>
 
-      {/* User card */}
       {!collapsed && (
         <div className="mt-6 rounded-md border border-white/10 bg-white/5 p-3">
           <p className="text-xs text-blue-100/70">Logged in as</p>
-          <p className="font-semibold">{currentUser?.name}</p>
+          <p className="font-semibold">
+            {currentUser?.firstName} {currentUser?.lastName}
+          </p>
           <p className="text-xs text-blue-100/70">{currentUser?.role}</p>
         </div>
       )}
 
-      {/* Logout */}
       <Button
         variant="ghost"
-        className={`mt-auto w-full text-white hover:bg-white/15 hover:text-white ${
-          collapsed ? "justify-center px-2" : "justify-start"
+        className={`mt-auto w-full text-white ${
+          collapsed ? "justify-center" : "justify-start"
         }`}
         onClick={() => {
           logout();
           navigate("/login");
         }}
       >
-        <LogOut className="h-4 w-4 shrink-0" />
+        <LogOut className="h-4 w-4" />
         {!collapsed && <span className="ml-3">Sign out</span>}
       </Button>
     </aside>
@@ -143,23 +145,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#f6f9fd]">
-      {/* Mobile header */}
-      <header className="sticky top-0 z-30 border-b bg-white lg:hidden">
-        <div className="flex items-center justify-between px-4 py-3">
-          <p className="font-bold text-slate-950">Admin</p>
-          <Button onClick={() => setOpen(!open)} variant="secondary">
-            {open ? <Menu className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </Button>
-        </div>
-
-        {open && (
-          <div className="fixed inset-x-0 top-[57px] z-40 h-[calc(100vh-57px)] overflow-y-auto">
-            {sidebar}
-          </div>
-        )}
-      </header>
-
-      {/* Layout */}
       <div
         className={`min-h-screen lg:grid ${
           collapsed
@@ -168,7 +153,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         }`}
       >
         <div className="hidden lg:block">{sidebar}</div>
-
         <main className="min-w-0 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>

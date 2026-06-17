@@ -10,7 +10,6 @@ import {
   Shield,
   ShieldAlert,
   PhoneCall,
-  ChevronRight,
   Hand,
 } from "lucide-react";
 
@@ -18,9 +17,8 @@ import { Link } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { getDashboardStats } from "../../mock/dashboardStats";
 
-import { Panel } from "../../components/ui/Cards";
+import { Panel, DashboardCard } from "../../components/ui/Cards";
 import { Button } from "../../components/ui/Button";
-import { DashboardCard } from "../../components/ui/Cards";
 import { formatDate } from "../../utils/format";
 
 export function StudentDashboard() {
@@ -29,7 +27,7 @@ export function StudentDashboard() {
   const stats = getDashboardStats(reports);
 
   const unread = notifications.filter(
-    (n) => n.role === "student" && !n.read,
+    (n) => n.role === "Student" && !n.read,
   ).length;
 
   const publishedResources = resources.filter((r) => r.published);
@@ -98,7 +96,7 @@ export function StudentDashboard() {
           <div className="grid lg:grid-cols-[1fr_240px] gap-5">
             <div>
               <h1 className="text-3xl font-bold flex items-center gap-2">
-                Welcome back, {currentUser?.name?.split(" ")[0]}
+                Welcome back, {currentUser?.firstName}
                 <Hand className="h-6 w-6 text-amber-500" />
               </h1>
 
@@ -142,7 +140,7 @@ export function StudentDashboard() {
           value={stats.totalReports}
           detail="All time"
           icon={<Files />}
-          accent="bg-blue-500"
+          variant="info"
         />
 
         <DashboardCard
@@ -150,7 +148,7 @@ export function StudentDashboard() {
           value={stats.pendingReports}
           detail="Awaiting review"
           icon={<Clock3 />}
-          accent="bg-amber-500"
+          variant="pending"
         />
 
         <DashboardCard
@@ -158,7 +156,7 @@ export function StudentDashboard() {
           value={stats.inReviewReports}
           detail="Processing"
           icon={<Activity />}
-          accent="bg-violet-500"
+          variant="review"
         />
 
         <DashboardCard
@@ -166,7 +164,7 @@ export function StudentDashboard() {
           value={stats.resolvedReports}
           detail="Completed"
           icon={<CheckCircle2 />}
-          accent="bg-emerald-500"
+          variant="success"
         />
 
         <DashboardCard
@@ -174,7 +172,7 @@ export function StudentDashboard() {
           value={stats.emergencyReports}
           detail="High priority"
           icon={<ShieldAlert />}
-          accent="bg-red-500"
+          variant="danger"
         />
       </div>
 
@@ -202,15 +200,23 @@ export function StudentDashboard() {
               </thead>
 
               <tbody>
-                {recentReports.map((r) => (
-                  <tr key={r.id} className="border-t">
-                    <td className="p-3">{r.id}</td>
-                    <td className="p-3">{r.type}</td>
-                    <td className="p-3">{r.status}</td>
-                    <td className="p-3">{formatDate(r.submittedAt)}</td>
-                    <td className="p-3">{formatDate(r.lastUpdated)}</td>
+                {recentReports.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-3 text-center text-slate-500">
+                      No reports yet.
+                    </td>
                   </tr>
-                ))}
+                ) : (
+                  recentReports.map((r) => (
+                    <tr key={r.id} className="border-t">
+                      <td className="p-3">{r.id}</td>
+                      <td className="p-3">{r.type}</td>
+                      <td className="p-3">{r.status}</td>
+                      <td className="p-3">{formatDate(r.submittedAt)}</td>
+                      <td className="p-3">{formatDate(r.lastUpdated)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
