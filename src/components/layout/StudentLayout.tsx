@@ -48,17 +48,16 @@ const moreLinks = [
 export function StudentLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const { currentUser, notifications, logout } = useApp();
+  const { currentUser, logout } = useApp();
   const navigate = useNavigate();
-  const unread = notifications.filter(
-    (item) => item.role === "student" && !item.read,
-  ).length;
-  const initials =
-    currentUser?.name
-      ?.split(" ")
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2) ?? "ST";
+
+  const unread = 0;
+  const initials = [
+    currentUser?.firstName?.[0] ?? "",
+    currentUser?.lastName?.[0] ?? "",
+  ]
+    .join("")
+    .toUpperCase() || "ST";
 
   const renderLink = ({
     to,
@@ -276,7 +275,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
                 </span>
                 <span className="text-left">
                   <span className="block text-sm font-bold text-slate-950">
-                    {currentUser?.name}
+                    {currentUser?.firstName} {currentUser?.lastName}
                   </span>
                   <span className="block text-xs text-slate-500">Student</span>
                 </span>

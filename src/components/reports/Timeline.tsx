@@ -1,5 +1,10 @@
-import type { TimelineItem } from '../../types';
 import { formatDate } from '../../utils/format';
+
+interface TimelineItem {
+  label: string;
+  date: string;
+  actor: string;
+}
 
 export function Timeline({ items }: { items: TimelineItem[] }) {
   return (

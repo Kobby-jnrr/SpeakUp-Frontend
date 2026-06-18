@@ -11,9 +11,10 @@ export function ProtectedRoute({
   children: ReactNode;
   role: Role;
 }) {
-  const token = localStorage.getItem("token");
-  const userStr = localStorage.getItem("user");
+  const token = sessionStorage.getItem("token");
+  const userStr = sessionStorage.getItem("user");
 
+  // Not logged in at all → go to login
   if (!token || !userStr) {
     return <Navigate to="/login" replace />;
   }
@@ -27,24 +28,29 @@ export function ProtectedRoute({
   }
 
   const userRole = (user?.role || "").toLowerCase();
+  const isAdmin = userRole === "junioradmin" || userRole === "superadmin";
+  const isStudent = userRole === "student";
 
-  // Student pages
+  // Student-only pages: admins get redirected to their dashboard
   if (role === "Student") {
-    if (userRole !== "student") {
-      return <Navigate to="/login" replace />;
+    if (!isStudent) {
+      return <Navigate to="/admin/dashboard" replace />;
     }
   }
 
+  // JuniorAdmin pages (also accessible by SuperAdmin): students get redirected to their home
   if (role === "JuniorAdmin") {
-    if (userRole !== "junioradmin" && userRole !== "superadmin") {
-      return <Navigate to="/login" replace />;
+    if (!isAdmin) {
+      return <Navigate to="/student/home" replace />;
     }
   }
 
-  // SuperAdmin-only pages
+  // SuperAdmin-only pages: non-superadmins get redirected appropriately
   if (role === "SuperAdmin") {
     if (userRole !== "superadmin") {
-      return <Navigate to="/login" replace />;
+      return isStudent
+        ? <Navigate to="/student/home" replace />
+        : <Navigate to="/admin/dashboard" replace />;
     }
   }
 

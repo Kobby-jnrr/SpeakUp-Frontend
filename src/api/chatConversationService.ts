@@ -1,11 +1,18 @@
 import api from "./api";
+import type { Conversation } from "../types";
 
 export const chatConversationService = {
-  createConversation: (data: any) => api.post("/ChatConversation/create", data),
+  createConversation: (data: {
+    chatType: string;
+    isAnonymous: boolean;
+    reportId?: number | null;
+  }) => api.post("/ChatConversation/create", data),
 
-  getMyConversations: () => api.get("/ChatConversation/my"),
+  getMyConversations: (page = 1, pageSize = 20) =>
+    api.get("/ChatConversation/my", { params: { page, pageSize } }),
 
-  getAllAdmin: () => api.get("/ChatConversation/admin/all"),
+  getAllAdmin: (page = 1, pageSize = 50) =>
+    api.get("/ChatConversation/admin/all", { params: { page, pageSize } }),
 
   getUnassigned: () => api.get("/ChatConversation/admin/unassigned"),
 
@@ -13,7 +20,8 @@ export const chatConversationService = {
 
   getClosed: () => api.get("/ChatConversation/admin/closed"),
 
-  assignAdmin: (data: any) => api.put("/ChatConversation/assign", data),
+  assignAdmin: (data: { conversationId: number; adminId: number }) =>
+    api.put("/ChatConversation/assign", data),
 
   getByReport: (reportId: number) =>
     api.get(`/ChatConversation/by-report/${reportId}`),

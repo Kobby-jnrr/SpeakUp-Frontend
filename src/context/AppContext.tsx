@@ -7,16 +7,25 @@ import {
   type ReactNode,
 } from "react";
 
-import type { NotificationItem, Report, Resource, Role, User } from "../types";
-
+import type { Role, User } from "../types";
 import { authService } from "../api/authService";
-import { todayIso } from "../utils/format";
 
 /**
- * 🔥 MAP backend number role → frontend Role string
+ * 🔥 MAP backend role → frontend Role string
+ * Handles any casing/spacing variation the backend might return
  */
-const mapRole = (role: number): Role => {
-  switch (role) {
+const mapRole = (role: string | number): Role => {
+  if (typeof role === "string") {
+    // Strip spaces and lowercase for flexible matching
+    // e.g. "SuperAdmin", "Super Admin", "superadmin" all work
+    const r = role.replace(/\s+/g, "").toLowerCase();
+    if (r.includes("super")) return "SuperAdmin";
+    if (r.includes("junior")) return "JuniorAdmin";
+    if (r.includes("student")) return "Student";
+  }
+
+  // Handle numeric roles as fallback
+  switch (Number(role)) {
     case 0:
       return "Student";
     case 1:
@@ -48,11 +57,7 @@ interface AppContextValue {
   register: (data: any) => Promise<any>;
   logout: () => void;
 
-  reports: Report[];
-  resources: Resource[];
-  notifications: NotificationItem[];
   toasts: ToastMessage[];
-
   addToast: (toast: Omit<ToastMessage, "id">) => void;
   removeToast: (id: string) => void;
 
@@ -63,20 +68,22 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [reports, setReports] = useState<Report[]>([]);
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   /**
-   * 🔁 Restore session
+   * 🔁 Restore session from sessionStorage
    */
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
+    const savedUser = sessionStorage.getItem("user");
+    const token = sessionStorage.getItem("token");
 
     if (savedUser && token) {
-      setCurrentUser(JSON.parse(savedUser));
+      try {
+        setCurrentUser(JSON.parse(savedUser));
+      } catch {
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+      }
     }
   }, []);
 
@@ -89,7 +96,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setTimeout(() => {
       setToasts((t) => t.filter((x) => x.id !== id));
-    }, 3000);
+    }, 4000);
   };
 
   const removeToast = (id: string) => {
@@ -97,7 +104,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   /**
-   * 🔐 LOGIN (FIXED ROLE MAPPING)
+   * 🔐 LOGIN
    */
   const login = async (
     email: string,
@@ -106,7 +113,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const res = await authService.login({ email, password });
     const data = res.data;
 
-    // 🔥 FIX: convert backend number → Role string
     const role = mapRole(data.role);
 
     const user: User = {
@@ -115,10 +121,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       lastName: data.lastName,
       email: data.email,
       role,
+      gender: data.gender ?? "",
+      department: data.department ?? "",
+      phoneNumber: data.phoneNumber ?? "",
     };
 
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(user));
+    sessionStorage.setItem("token", data.token);
+    sessionStorage.setItem("user", JSON.stringify(user));
 
     setCurrentUser(user);
 
@@ -137,8 +146,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
    * 🚪 LOGOUT
    */
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     setCurrentUser(null);
   };
 
@@ -154,17 +163,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       register,
       logout,
 
-      reports,
-      resources,
-      notifications,
       toasts,
-
       addToast,
       removeToast,
 
       setCurrentUser,
     }),
-    [currentUser, reports, resources, notifications, toasts],
+    [currentUser, toasts],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

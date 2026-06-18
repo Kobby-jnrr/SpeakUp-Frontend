@@ -1,6 +1,6 @@
 /**
  * CHANGE: Centralized auth handling
- * (prevents repeating localStorage logic everywhere)
+ * Uses sessionStorage for per-tab session isolation
  */
 
 export type AuthUser = {
@@ -16,12 +16,12 @@ export const isAdminRole = (role?: string) => {
 };
 
 export const setAuth = (token: string, user: AuthUser) => {
-  localStorage.setItem("token", token);
-  localStorage.setItem("user", JSON.stringify(user));
+  sessionStorage.setItem("token", token);
+  sessionStorage.setItem("user", JSON.stringify(user));
 };
 
 export const getUser = (): AuthUser | null => {
-  const data = localStorage.getItem("user");
+  const data = sessionStorage.getItem("user");
   if (!data) return null;
 
   try {
@@ -32,10 +32,10 @@ export const getUser = (): AuthUser | null => {
 };
 
 export const getToken = () => {
-  return localStorage.getItem("token");
+  return sessionStorage.getItem("token");
 };
 
 export const logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("user");
 };

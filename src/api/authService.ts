@@ -10,6 +10,8 @@ export const authService = {
     lastName: string;
     email: string;
     phoneNumber: string;
+    gender: string;
+    department: string;
     password: string;
   }) => {
     return api.post("/Auth/register", data);

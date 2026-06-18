@@ -1,16 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { Panel } from "../ui/Cards";
-
-interface Message {
-  id: number;
-  message: string;
-  senderId: number;
-  senderName?: string;
-  sentAt: string;
-  isRead: boolean;
-}
+import { chatMessageService } from "../../api/chatMessageService";
+import type { ChatMessage } from "../../types";
 
 interface ChatWindowProps {
   conversationId: number;
@@ -18,89 +11,125 @@ interface ChatWindowProps {
 
 export function ChatWindow({ conversationId }: ChatWindowProps) {
   const { currentUser, addToast } = useApp();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  // TODO: load messages from backend, e.g.:
-  // useEffect(() => {
-  //   const load = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const res = await chatMessageService.getMessages(conversationId);
-  //       setMessages(res.data);
-  //     } catch { addToast({ title: "Error", message: "Could not load messages", tone: "error" }); }
-  //     finally { setLoading(false); }
-  //   };
-  //   load();
-  //   const interval = setInterval(load, 3000);
-  //   return () => clearInterval(interval);
-  // }, [conversationId]);
+  const loadMessages = async (showLoader = false) => {
+    if (showLoader) setLoading(true);
+    try {
+      const res = await chatMessageService.getMessages(conversationId);
+      setMessages(res.data);
+    } catch {
+      if (showLoader) {
+        addToast({ title: "Error", message: "Could not load messages", tone: "error" });
+      }
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  };
+
+  // Initial load + 3-second polling
+  useEffect(() => {
+    loadMessages(true);
+    const interval = setInterval(() => loadMessages(false), 3000);
+    return () => clearInterval(interval);
+  }, [conversationId]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || sending) return;
 
+    const text = newMessage.trim();
+    setNewMessage("");
     setSending(true);
-    try {
-      // TODO: send message via backend, e.g.:
-      // await chatMessageService.sendMessage({ conversationId, message: newMessage });
-      // const res = await chatMessageService.getMessages(conversationId);
-      // setMessages(res.data);
 
-      throw new Error("Chat messaging not yet connected to backend");
-    } catch (err) {
+    try {
+      await chatMessageService.sendMessage({
+        conversationId,
+        message: text,
+      });
+      // Immediately reload to show the sent message
+      await loadMessages(false);
+    } catch (err: any) {
       addToast({
         title: "Failed to send",
-        message: "Could not send your message",
+        message:
+          err.response?.data?.message ||
+          err.response?.data ||
+          "Could not send your message",
         tone: "error",
       });
+      // Restore the typed text on failure
+      setNewMessage(text);
     } finally {
       setSending(false);
     }
   };
 
   if (loading) {
-    return <Panel>Loading messages...</Panel>;
+    return (
+      <Panel>
+        <p className="text-slate-500 text-sm text-center py-8">Loading messages…</p>
+      </Panel>
+    );
   }
 
   return (
-    <Panel className="flex flex-col h-full max-h-96">
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto mb-4 space-y-3 bg-slate-50 p-4 rounded-md">
+    <Panel className="flex flex-col h-[480px]">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto space-y-3 bg-slate-50 p-4 rounded-md mb-4">
         {messages.length === 0 ? (
-          <p className="text-center text-slate-600 py-8">No messages yet</p>
+          <p className="text-center text-slate-400 text-sm py-8">
+            No messages yet — say hello!
+          </p>
         ) : (
-          messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${
-                msg.senderId === Number(currentUser?.id)
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
+          messages.map((msg) => {
+            const isMe = msg.senderId === Number(currentUser?.id);
+            return (
               <div
-                className={`max-w-xs px-4 py-2 rounded-lg ${
-                  msg.senderId === Number(currentUser?.id)
-                    ? "bg-institution-600 text-white rounded-br-none"
-                    : "bg-white border border-slate-200 text-slate-900 rounded-bl-none"
-                }`}
+                key={msg.id}
+                className={`flex ${isMe ? "justify-end" : "justify-start"}`}
               >
-                <p className="text-sm">{msg.message}</p>
                 <div
-                  className={`text-xs mt-1 ${
-                    msg.senderId === Number(currentUser?.id)
-                      ? "text-institution-100"
-                      : "text-slate-500"
+                  className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
+                    isMe
+                      ? "bg-institution-600 text-white rounded-br-none"
+                      : "bg-white border border-slate-200 text-slate-900 rounded-bl-none"
                   }`}
                 >
-                  {new Date(msg.sentAt).toLocaleTimeString()}
+                  {!isMe && msg.sender && (
+                    <p
+                      className={`text-xs font-semibold mb-1 ${
+                        isMe ? "text-institution-100" : "text-slate-500"
+                      }`}
+                    >
+                      {msg.sender.firstName} {msg.sender.lastName}
+                    </p>
+                  )}
+                  <p>{msg.message}</p>
+                  <div
+                    className={`text-xs mt-1 ${
+                      isMe ? "text-institution-100" : "text-slate-400"
+                    }`}
+                  >
+                    {new Date(msg.sentAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
+        <div ref={bottomRef} />
       </div>
 
       {/* Input */}
@@ -109,14 +138,15 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Type a message..."
-          className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-institution-600"
+          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+          placeholder="Type a message…"
+          disabled={sending}
+          className="flex-1 px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-institution-600 disabled:opacity-50"
         />
         <button
           onClick={handleSend}
           disabled={sending || !newMessage.trim()}
-          className="p-2 bg-institution-600 text-white rounded-md hover:bg-institution-700 disabled:opacity-50"
+          className="p-2 bg-institution-600 text-white rounded-md hover:bg-institution-700 disabled:opacity-50 transition"
         >
           <Send size={18} />
         </button>

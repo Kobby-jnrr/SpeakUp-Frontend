@@ -1,46 +1,58 @@
-import { useState } from "react";
-import { Zap, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Zap, Plus, ToggleLeft, ToggleRight } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { Button } from "../../components/ui/Button";
 import { Panel } from "../../components/ui/Cards";
 import { Field, inputClass } from "../../components/ui/Form";
+import { homepageService } from "../../api/homepageService";
+import type { HomePageContentItem } from "../../types";
 
-interface ContentItem {
-  id: number;
-  type: string;
-  title: string;
-  content: string;
-  imageUrl?: string;
-  isActive: boolean;
-  createdAt: string;
-}
+const CONTENT_TYPES = ["Hero", "Bulletin", "SafetyTip"];
+
+const TYPE_LABELS: Record<string, string> = {
+  Hero: "Hero Section",
+  Bulletin: "Bulletin",
+  SafetyTip: "Safety Tip",
+};
+
+const TYPE_COLORS: Record<string, string> = {
+  Hero: "bg-violet-100 text-violet-700",
+  Bulletin: "bg-blue-100 text-blue-700",
+  SafetyTip: "bg-emerald-100 text-emerald-700",
+};
+
+const emptyForm = {
+  type: "Hero",
+  title: "",
+  content: "",
+  imageUrl: "",
+  startAt: "",
+  endAt: "",
+};
 
 export function AdminHomePageContentPage() {
   const { addToast } = useApp();
-  const [contents, setContents] = useState<ContentItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [contents, setContents] = useState<HomePageContentItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
-    type: "Hero",
-    title: "",
-    content: "",
-    imageUrl: "",
-    startAt: "",
-    endAt: "",
-  });
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState(emptyForm);
 
-  // TODO: load homepage content from backend, e.g.:
-  // useEffect(() => {
-  //   const load = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const res = await homepageService.getAllContent();
-  //       setContents(res.data);
-  //     } catch { addToast({ title: "Error", message: "Failed to load homepage content", tone: "error" }); }
-  //     finally { setLoading(false); }
-  //   };
-  //   load();
-  // }, []);
+  const loadContents = async () => {
+    setLoading(true);
+    try {
+      const res = await homepageService.getAllContent();
+      setContents(res.data);
+    } catch {
+      addToast({ title: "Error", message: "Failed to load homepage content", tone: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadContents();
+  }, []);
 
   const handleCreateContent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,50 +60,68 @@ export function AdminHomePageContentPage() {
     if (!form.title.trim() || !form.content.trim()) {
       addToast({
         title: "Validation error",
-        message: "Please fill in all required fields",
+        message: "Title and content are required",
         tone: "warning",
       });
       return;
     }
 
-    // TODO: create content via backend, e.g.:
-    // await homepageService.createContent(form);
-    // then reload contents
-
-    addToast({
-      title: "Content created",
-      message: `${form.type} content created successfully`,
-      tone: "success",
-    });
-    setForm({ type: "Hero", title: "", content: "", imageUrl: "", startAt: "", endAt: "" });
-    setShowForm(false);
+    setSubmitting(true);
+    try {
+      await homepageService.createContent({
+        type: form.type,
+        title: form.title,
+        content: form.content,
+        imageUrl: form.imageUrl || null,
+        startAt: form.startAt || null,
+        endAt: form.endAt || null,
+      });
+      addToast({
+        title: "Content created",
+        message: `${TYPE_LABELS[form.type]} published successfully`,
+        tone: "success",
+      });
+      setForm(emptyForm);
+      setShowForm(false);
+      loadContents();
+    } catch (err: any) {
+      addToast({
+        title: "Error",
+        message: err.response?.data?.message || "Could not create content",
+        tone: "error",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleToggleActive = async (id: number) => {
-    // TODO: toggle content status via backend, e.g.:
-    // await homepageService.toggleContent(id);
-    // then reload contents
-
-    setContents((items) =>
-      items.map((item) =>
-        item.id === id ? { ...item, isActive: !item.isActive } : item,
-      ),
-    );
-    addToast({ title: "Updated", message: "Content status updated", tone: "success" });
+  const handleToggle = async (id: number) => {
+    try {
+      await homepageService.toggleContent(id);
+      // Optimistic update
+      setContents((items) =>
+        items.map((item) =>
+          item.id === id ? { ...item, isActive: !item.isActive } : item,
+        ),
+      );
+    } catch {
+      addToast({ title: "Error", message: "Could not update content status", tone: "error" });
+      // Revert by reloading
+      loadContents();
+    }
   };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <Panel className="border-institution-100 bg-institution-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Zap className="text-institution-600" size={32} />
             <div>
-              <h1 className="text-2xl font-bold text-slate-950">
-                Homepage Content
-              </h1>
+              <h1 className="text-2xl font-bold text-slate-950">Homepage Content</h1>
               <p className="text-sm text-slate-700">
-                Manage hero sections, bulletins, and safety tips
+                Manage hero sections, bulletins, and safety tips shown to students
               </p>
             </div>
           </div>
@@ -100,11 +130,12 @@ export function AdminHomePageContentPage() {
             className="bg-institution-600 hover:bg-institution-700 text-white"
           >
             <Plus size={18} className="mr-1" />
-            Add Content
+            {showForm ? "Cancel" : "Add Content"}
           </Button>
         </div>
       </Panel>
 
+      {/* Create Form */}
       {showForm && (
         <Panel>
           <h2 className="text-lg font-semibold mb-4">Create New Content</h2>
@@ -116,9 +147,9 @@ export function AdminHomePageContentPage() {
                   onChange={(e) => setForm({ ...form, type: e.target.value })}
                   className={inputClass}
                 >
-                  <option value="Hero">Hero Section</option>
-                  <option value="Bulletin">Bulletin</option>
-                  <option value="SafetyTip">Safety Tip</option>
+                  {CONTENT_TYPES.map((t) => (
+                    <option key={t} value={t}>{TYPE_LABELS[t]}</option>
+                  ))}
                 </select>
               </Field>
 
@@ -137,53 +168,51 @@ export function AdminHomePageContentPage() {
               <textarea
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
-                className={`${inputClass} min-h-32`}
-                placeholder="Enter content text"
+                className={`${inputClass} min-h-[100px]`}
+                placeholder="Enter content body text"
               />
             </Field>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <Field label="Image URL (optional)">
                 <input
                   type="url"
                   value={form.imageUrl}
-                  onChange={(e) =>
-                    setForm({ ...form, imageUrl: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
                   className={inputClass}
-                  placeholder="https://example.com/image.jpg"
+                  placeholder="https://…"
                 />
               </Field>
-
-              <Field label="Display Start Date (optional)">
+              <Field label="Display Start (optional)">
                 <input
                   type="datetime-local"
                   value={form.startAt}
-                  onChange={(e) =>
-                    setForm({ ...form, startAt: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, startAt: e.target.value })}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Display End (optional)">
+                <input
+                  type="datetime-local"
+                  value={form.endAt}
+                  onChange={(e) => setForm({ ...form, endAt: e.target.value })}
                   className={inputClass}
                 />
               </Field>
             </div>
 
-            <Field label="Display End Date (optional)">
-              <input
-                type="datetime-local"
-                value={form.endAt}
-                onChange={(e) => setForm({ ...form, endAt: e.target.value })}
-                className={inputClass}
-              />
-            </Field>
-
             <div className="flex gap-2">
-              <Button type="submit" className="bg-institution-600 text-white">
-                Create Content
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-institution-600 hover:bg-institution-700 text-white"
+              >
+                {submitting ? "Creating…" : "Create Content"}
               </Button>
               <Button
                 type="button"
-                onClick={() => setShowForm(false)}
-                className="bg-slate-200 text-slate-700"
+                onClick={() => { setShowForm(false); setForm(emptyForm); }}
+                className="bg-slate-200 text-slate-700 hover:bg-slate-300"
               >
                 Cancel
               </Button>
@@ -195,14 +224,14 @@ export function AdminHomePageContentPage() {
       {/* Content List */}
       <Panel>
         <h2 className="text-lg font-semibold mb-4">
-          {loading ? "Loading..." : `${contents.length} Content Items`}
+          {loading ? "Loading…" : `${contents.length} Content Items`}
         </h2>
 
         {loading ? (
-          <p className="text-slate-600">Loading content...</p>
+          <p className="text-slate-500 text-sm">Loading content…</p>
         ) : contents.length === 0 ? (
-          <p className="text-slate-600 text-center py-8">
-            No content created yet
+          <p className="text-slate-500 text-center py-8 text-sm">
+            No content created yet. Click "Add Content" to get started.
           </p>
         ) : (
           <div className="space-y-3">
@@ -212,34 +241,44 @@ export function AdminHomePageContentPage() {
                 className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition"
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-slate-900">
-                        {item.title}
-                      </h3>
-                      <span className="px-2 py-1 text-xs font-semibold bg-slate-200 text-slate-700 rounded">
-                        {item.type}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-slate-900">{item.title}</h3>
+                      <span
+                        className={`px-2 py-0.5 text-xs font-semibold rounded ${
+                          TYPE_COLORS[item.type] ?? "bg-slate-200 text-slate-700"
+                        }`}
+                      >
+                        {TYPE_LABELS[item.type] ?? item.type}
                       </span>
+                      {item.isActive !== undefined && (
+                        <span
+                          className={`px-2 py-0.5 text-xs font-semibold rounded ${
+                            item.isActive
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {item.isActive ? "Active" : "Inactive"}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-sm text-slate-600 mt-1 line-clamp-2">
-                      {item.content}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-2">
-                      Created: {new Date(item.createdAt).toLocaleDateString()}
+                    <p className="text-sm text-slate-600 mt-1 line-clamp-2">{item.content}</p>
+                    <p className="text-xs text-slate-400 mt-2">
+                      Created: {new Date(item.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      onClick={() => handleToggleActive(item.id)}
-                      className={`text-sm ${
-                        item.isActive
-                          ? "bg-support-100 text-support-700"
-                          : "bg-slate-200 text-slate-700"
-                      }`}
-                    >
-                      {item.isActive ? "Active" : "Inactive"}
-                    </Button>
-                  </div>
+                  <button
+                    onClick={() => handleToggle(item.id)}
+                    className="text-slate-500 hover:text-institution-600 transition flex-shrink-0"
+                    title={item.isActive ? "Deactivate" : "Activate"}
+                  >
+                    {item.isActive ? (
+                      <ToggleRight size={28} className="text-emerald-600" />
+                    ) : (
+                      <ToggleLeft size={28} />
+                    )}
+                  </button>
                 </div>
               </div>
             ))}

@@ -1,5 +1,5 @@
 import api from "./api";
-import type { Report } from "../types";
+import type { BackendReport } from "../types";
 
 export interface CreateReportPayload {
   title: string;
@@ -29,13 +29,13 @@ export interface CreateReportPayload {
 export const reportService = {
   // STUDENT: CREATE REPORT
   createReport: (data: CreateReportPayload) =>
-    api.post<Report>("/Report/create", data),
+    api.post<BackendReport>("/Report/create", data),
 
   // STUDENT: GET MY REPORTS
-  getMyReports: () => api.get<Report[]>("/Report/my"),
+  getMyReports: () => api.get<BackendReport[]>("/Report/my"),
 
   // ADMIN: GET ALL REPORTS
-  getAllReports: () => api.get<Report[]>("/Report/all"),
+  getAllReports: () => api.get<BackendReport[]>("/Report/all"),
 
   // ADMIN: CLAIM REPORT
   claimReport: (reportId: number) => api.post(`/Report/claim/${reportId}`),

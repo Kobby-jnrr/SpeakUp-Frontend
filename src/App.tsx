@@ -37,7 +37,7 @@ import {
 } from "./pages/student";
 
 // ================= PUBLIC =================
-import { HomePage, ChooseRole, NotFoundPage } from "./pages/PublicPages";
+import { HomePage, NotFoundPage } from "./pages/PublicPages";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 
@@ -64,7 +64,7 @@ export default function App() {
       <Routes>
         {/* ================= PUBLIC ================= */}
         <Route path="/" element={<HomePage />} />
-        <Route path="/choose-role" element={<ChooseRole />} />
+
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<SignupPage />} />
 

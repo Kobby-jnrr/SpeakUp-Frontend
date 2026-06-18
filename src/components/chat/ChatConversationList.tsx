@@ -1,15 +1,6 @@
-import { useState } from "react";
-import { Panel } from "../ui/Cards";
-
-interface Conversation {
-  id: number;
-  chatType: string;
-  status: string;
-  isAnonymous: boolean;
-  createdAt: string;
-  lastMessage?: string;
-  lastMessageTime?: string;
-}
+import { useEffect, useState } from "react";
+import { chatConversationService } from "../../api/chatConversationService";
+import type { Conversation } from "../../types";
 
 interface ChatConversationListProps {
   onSelectConversation: (id: number) => void;
@@ -23,35 +14,49 @@ export function ChatConversationList({
   adminMode = false,
 }: ChatConversationListProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // TODO: load conversations from backend, e.g.:
-  // useEffect(() => {
-  //   const load = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const res = adminMode
-  //         ? await chatConversationService.getAllAdmin()
-  //         : await chatConversationService.getMyConversations();
-  //       setConversations(res.data.items || res.data);
-  //     } catch (err) { console.error("Failed to load conversations:", err); }
-  //     finally { setLoading(false); }
-  //   };
-  //   load();
-  // }, [adminMode]);
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = adminMode
+          ? await chatConversationService.getAllAdmin()
+          : await chatConversationService.getMyConversations();
+        const data = res.data;
+        setConversations(Array.isArray(data) ? data : data.items ?? []);
+      } catch (err) {
+        console.error("Failed to load conversations:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [adminMode]);
 
   if (loading) {
-    return <p className="text-slate-600 text-sm">Loading conversations...</p>;
+    return (
+      <div className="py-6 text-center">
+        <p className="text-slate-500 text-sm">Loading conversations…</p>
+      </div>
+    );
   }
 
   if (conversations.length === 0) {
     return (
-      <p className="text-center text-slate-600 py-8">No conversations yet</p>
+      <div className="py-8 text-center">
+        <p className="text-slate-400 text-sm">No conversations yet</p>
+        {!adminMode && (
+          <p className="text-slate-400 text-xs mt-1">
+            Click "New Chat" to start one
+          </p>
+        )}
+      </div>
     );
   }
 
   return (
-    <div className="space-y-2 max-h-96 overflow-y-auto">
+    <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
       {conversations.map((conv) => (
         <button
           key={conv.id}
@@ -63,23 +68,23 @@ export function ChatConversationList({
           }`}
         >
           <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="font-semibold text-sm text-slate-900">
                 {conv.chatType} {conv.isAnonymous && "(Anonymous)"}
               </div>
               {conv.lastMessage && (
-                <p className="text-sm text-slate-600 truncate">
+                <p className="text-xs text-slate-500 truncate mt-0.5">
                   {conv.lastMessage}
                 </p>
               )}
-              <div className="text-xs text-slate-500 mt-1">
+              <div className="text-xs text-slate-400 mt-1">
                 {new Date(conv.createdAt).toLocaleDateString()}
               </div>
             </div>
             <span
-              className={`px-2 py-1 text-xs font-semibold rounded ${
+              className={`px-2 py-0.5 text-xs font-semibold rounded whitespace-nowrap flex-shrink-0 ${
                 conv.status === "Open"
-                  ? "bg-support-100 text-support-700"
+                  ? "bg-emerald-100 text-emerald-700"
                   : "bg-slate-200 text-slate-700"
               }`}
             >

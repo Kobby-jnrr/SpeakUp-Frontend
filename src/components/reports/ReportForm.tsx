@@ -5,6 +5,7 @@ import { useApp } from "../../context/AppContext";
 import { Button } from "../ui/Button";
 import { Panel } from "../ui/Cards";
 import { Field, inputClass } from "../ui/Form";
+import { reportService } from "../../api/reportService";
 
 const complaintOptions = [
   "Unwelcome sexual comments",
@@ -32,11 +33,14 @@ export function ReportForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [files, setFiles] = useState<File[]>([]);
   const [form, setForm] = useState({
-    fullName: currentUser?.name ?? "",
-    complainantGender: "",
-    complainantStudentId: currentUser?.studentId ?? currentUser?.id ?? "",
+    fullName:
+      [currentUser?.firstName, currentUser?.lastName]
+        .filter(Boolean)
+        .join(" ") ?? "",
+    complainantGender: currentUser?.gender ?? "",
+    complainantStudentId: currentUser?.id ?? "",
     department: currentUser?.department ?? "",
-    contactNumber: "",
+    contactNumber: currentUser?.phoneNumber ?? "",
     email: currentUser?.email ?? "",
     respondentName: "",
     respondentPosition: "",
@@ -60,10 +64,8 @@ export function ReportForm() {
     confidential: false,
   });
 
-  const update = (
-    key: keyof typeof form,
-    value: string | boolean | string[],
-  ) => setForm((current) => ({ ...current, [key]: value as never }));
+  const update = (key: keyof typeof form, value: string | boolean | string[]) =>
+    setForm((current) => ({ ...current, [key]: value as never }));
 
   const toggleListValue = (
     key: "complaintNature" | "evidenceTypes",
@@ -146,41 +148,47 @@ export function ReportForm() {
         : item,
     );
 
-    // TODO: connect to backend — call reportService.createReport with this payload:
-    // const payload = {
-    //   title: `Sexual Harassment Complaint - ${form.fullName}`,
-    //   description: form.description,
-    //   complainantGender: form.complainantGender,
-    //   complainantStudentId: form.complainantStudentId,
-    //   department: form.department,
-    //   contactNumber: form.contactNumber,
-    //   email: form.email,
-    //   respondentName: form.respondentName,
-    //   respondentPosition: form.respondentPosition,
-    //   respondentDepartment: form.respondentDepartment,
-    //   relationshipToComplainant: form.relationshipToComplainant,
-    //   incidentDate: form.incidentDate,
-    //   incidentTime: form.incidentTime || "Not specified",
-    //   incidentLocation: form.incidentLocation,
-    //   complaintNature,
-    //   witness1Name: form.witness1Name,
-    //   witness1Contact: form.witness1Contact,
-    //   witness2Name: form.witness2Name,
-    //   witness2Contact: form.witness2Contact,
-    //   priorReportWhere: form.reportedBefore === "Yes" ? form.priorReportWhere : "No",
-    //   desiredOutcome: form.desiredOutcome,
-    //   confidential: form.confidential,
-    // };
-    // const response = await reportService.createReport(payload);
-    // addToast({ title: "Report submitted", message: `Report ${response.data.id} created successfully.`, tone: "success" });
-    // navigate("/student/my-reports");
+    const payload = {
+      title: `Sexual Harassment Complaint - ${form.fullName}`,
+      description: form.description,
+      complainantGender: form.complainantGender,
+      complainantStudentId: form.complainantStudentId,
+      department: form.department,
+      contactNumber: form.contactNumber,
+      email: form.email,
+      respondentName: form.respondentName,
+      respondentPosition: form.respondentPosition,
+      respondentDepartment: form.respondentDepartment,
+      relationshipToComplainant: form.relationshipToComplainant,
+      incidentDate: form.incidentDate,
+      incidentTime: form.incidentTime || "Not specified",
+      incidentLocation: form.incidentLocation,
+      complaintNature,
+      witness1Name: form.witness1Name,
+      witness1Contact: form.witness1Contact,
+      witness2Name: form.witness2Name,
+      witness2Contact: form.witness2Contact,
+      priorReportWhere:
+        form.reportedBefore === "Yes" ? form.priorReportWhere : "No",
+      desiredOutcome: form.desiredOutcome,
+      confidential: form.confidential,
+    };
 
     try {
-      throw new Error("Report submission not yet connected to backend");
+      const response = await reportService.createReport(payload);
+      addToast({
+        title: "Report submitted",
+        message: `Report ${response.data.id} created successfully.`,
+        tone: "success",
+      });
+      navigate("/student/my-reports");
     } catch (err: any) {
       addToast({
         title: "Submission failed",
-        message: err.response?.data?.message || err.message || "Could not submit report",
+        message:
+          err.response?.data?.message ||
+          err.message ||
+          "Could not submit report",
         tone: "error",
       });
     } finally {
@@ -212,13 +220,14 @@ export function ReportForm() {
             <input
               className={inputClass}
               value={form.fullName}
-              onChange={(event) => update("fullName", event.target.value)}
+              readOnly
             />
           </Field>
           <Field label="Gender" error={errors.complainantGender} required>
             <input
               className={inputClass}
               value={form.complainantGender}
+              readOnly={!!currentUser?.gender}
               onChange={(event) =>
                 update("complainantGender", event.target.value)
               }
@@ -228,15 +237,14 @@ export function ReportForm() {
             <input
               className={inputClass}
               value={form.complainantStudentId}
-              onChange={(event) =>
-                update("complainantStudentId", event.target.value)
-              }
+              readOnly
             />
           </Field>
           <Field label="Department/Unit">
             <input
               className={inputClass}
               value={form.department}
+              readOnly={!!currentUser?.department}
               onChange={(event) => update("department", event.target.value)}
             />
           </Field>
@@ -244,6 +252,7 @@ export function ReportForm() {
             <input
               className={inputClass}
               value={form.contactNumber}
+              readOnly={!!currentUser?.phoneNumber}
               onChange={(event) => update("contactNumber", event.target.value)}
             />
           </Field>
@@ -252,7 +261,7 @@ export function ReportForm() {
               className={inputClass}
               type="email"
               value={form.email}
-              onChange={(event) => update("email", event.target.value)}
+              readOnly
             />
           </Field>
         </div>
@@ -305,7 +314,11 @@ export function ReportForm() {
           Section C: Incident Details
         </h2>
         <div className="mt-5 grid gap-4 md:grid-cols-3">
-          <Field label="Date(s) of Incident" error={errors.incidentDate} required>
+          <Field
+            label="Date(s) of Incident"
+            error={errors.incidentDate}
+            required
+          >
             <input
               className={inputClass}
               type="date"
@@ -428,7 +441,9 @@ export function ReportForm() {
       </Panel>
 
       <Panel>
-        <h2 className="text-lg font-bold text-slate-950">Section E: Evidence</h2>
+        <h2 className="text-lg font-bold text-slate-950">
+          Section E: Evidence
+        </h2>
         <div className="mt-4 grid gap-3 md:grid-cols-3">
           {evidenceOptions.map((option) => (
             <label

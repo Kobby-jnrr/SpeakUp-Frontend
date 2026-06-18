@@ -10,6 +10,8 @@ export default function SignupPage() {
     lastName: "",
     email: "",
     phoneNumber: "",
+    gender: "",
+    department: "",
     password: "",
     confirmPassword: "",
   });
@@ -18,7 +20,9 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -33,6 +37,11 @@ export default function SignupPage() {
       return;
     }
 
+    if (!formData.gender.trim()) {
+      setError("Please select your gender.");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -41,6 +50,8 @@ export default function SignupPage() {
         lastName: formData.lastName,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
+        gender: formData.gender,
+        department: formData.department,
         password: formData.password,
       });
 
@@ -87,24 +98,48 @@ export default function SignupPage() {
             placeholder="First Name"
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-lg"
+            required
           />
           <input
             name="lastName"
             placeholder="Last Name"
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-lg"
+            required
           />
+          <div className="grid gap-4 md:grid-cols-2">
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg bg-white"
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+            <input
+              name="department"
+              placeholder="Department"
+              value={formData.department}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg"
+            />
+          </div>
+
           <input
             name="email"
             placeholder="Email"
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-lg"
+            required
           />
           <input
             name="phoneNumber"
             placeholder="Phone Number"
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-lg"
+            required
           />
 
           <input
@@ -113,6 +148,7 @@ export default function SignupPage() {
             placeholder="Password"
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-lg"
+            required
           />
           <input
             name="confirmPassword"
@@ -120,6 +156,7 @@ export default function SignupPage() {
             placeholder="Confirm Password"
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-lg"
+            required
           />
 
           <button
