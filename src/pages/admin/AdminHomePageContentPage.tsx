@@ -1,11 +1,23 @@
 import { useEffect, useState } from "react";
-import { Zap, Plus, ToggleLeft, ToggleRight } from "lucide-react";
+import { Zap, Plus, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { Button } from "../../components/ui/Button";
 import { Panel } from "../../components/ui/Cards";
 import { Field, inputClass } from "../../components/ui/Form";
 import { homepageService } from "../../api/homepageService";
-import type { HomePageContentItem } from "../../types";
+
+type HomePageContentItem = {
+  id: number;
+  type: string;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+  startAt?: string;
+  endAt?: string;
+  createdBy: string;
+};
 
 const CONTENT_TYPES = ["Hero", "Bulletin", "SafetyTip"];
 
@@ -13,12 +25,6 @@ const TYPE_LABELS: Record<string, string> = {
   Hero: "Hero Section",
   Bulletin: "Bulletin",
   SafetyTip: "Safety Tip",
-};
-
-const TYPE_COLORS: Record<string, string> = {
-  Hero: "bg-violet-100 text-violet-700",
-  Bulletin: "bg-blue-100 text-blue-700",
-  SafetyTip: "bg-emerald-100 text-emerald-700",
 };
 
 const emptyForm = {
@@ -30,8 +36,14 @@ const emptyForm = {
   endAt: "",
 };
 
+const toUtcIso = (value: string | null | undefined) => {
+  if (!value) return null;
+  return new Date(value).toISOString();
+};
+
 export function AdminHomePageContentPage() {
   const { addToast } = useApp();
+
   const [contents, setContents] = useState<HomePageContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -44,7 +56,11 @@ export function AdminHomePageContentPage() {
       const res = await homepageService.getAllContent();
       setContents(res.data);
     } catch {
-      addToast({ title: "Error", message: "Failed to load homepage content", tone: "error" });
+      addToast({
+        title: "Error",
+        message: "Failed to load content",
+        tone: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -54,40 +70,34 @@ export function AdminHomePageContentPage() {
     loadContents();
   }, []);
 
-  const handleCreateContent = async (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.title.trim() || !form.content.trim()) {
-      addToast({
-        title: "Validation error",
-        message: "Title and content are required",
-        tone: "warning",
-      });
-      return;
-    }
-
-    setSubmitting(true);
     try {
+      setSubmitting(true);
+
       await homepageService.createContent({
         type: form.type,
         title: form.title,
         content: form.content,
         imageUrl: form.imageUrl || null,
-        startAt: form.startAt || null,
-        endAt: form.endAt || null,
+        startAt: toUtcIso(form.startAt),
+        endAt: toUtcIso(form.endAt),
       });
+
       addToast({
-        title: "Content created",
-        message: `${TYPE_LABELS[form.type]} published successfully`,
+        title: "Success",
+        message: "Content created",
         tone: "success",
       });
+
       setForm(emptyForm);
       setShowForm(false);
       loadContents();
-    } catch (err: any) {
+    } catch {
       addToast({
         title: "Error",
-        message: err.response?.data?.message || "Could not create content",
+        message: "Failed to create content",
         tone: "error",
       });
     } finally {
@@ -98,192 +108,149 @@ export function AdminHomePageContentPage() {
   const handleToggle = async (id: number) => {
     try {
       await homepageService.toggleContent(id);
-      // Optimistic update
-      setContents((items) =>
-        items.map((item) =>
-          item.id === id ? { ...item, isActive: !item.isActive } : item,
-        ),
+
+      setContents((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, isActive: !c.isActive } : c)),
       );
     } catch {
-      addToast({ title: "Error", message: "Could not update content status", tone: "error" });
-      // Revert by reloading
-      loadContents();
+      addToast({
+        title: "Error",
+        message: "Toggle failed",
+        tone: "error",
+      });
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Delete this content?")) return;
+
+    try {
+      await homepageService.deleteContent(id);
+
+      setContents((prev) => prev.filter((c) => c.id !== id));
+
+      addToast({
+        title: "Deleted",
+        message: "Content removed",
+        tone: "success",
+      });
+    } catch {
+      addToast({
+        title: "Error",
+        message: "Delete failed",
+        tone: "error",
+      });
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <Panel className="border-institution-100 bg-institution-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Zap className="text-institution-600" size={32} />
-            <div>
-              <h1 className="text-2xl font-bold text-slate-950">Homepage Content</h1>
-              <p className="text-sm text-slate-700">
-                Manage hero sections, bulletins, and safety tips shown to students
-              </p>
-            </div>
+      {/* HEADER */}
+      <Panel>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Homepage Content</h1>
+            <p className="text-sm text-slate-600">Manage what students see</p>
           </div>
-          <Button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-institution-600 hover:bg-institution-700 text-white"
-          >
-            <Plus size={18} className="mr-1" />
-            {showForm ? "Cancel" : "Add Content"}
+
+          <Button onClick={() => setShowForm(!showForm)}>
+            <Plus size={16} />
+            {showForm ? "Cancel" : "Add"}
           </Button>
         </div>
       </Panel>
 
-      {/* Create Form */}
+      {/* FORM */}
       {showForm && (
         <Panel>
-          <h2 className="text-lg font-semibold mb-4">Create New Content</h2>
-          <form onSubmit={handleCreateContent} className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Content Type" required>
-                <select
-                  value={form.type}
-                  onChange={(e) => setForm({ ...form, type: e.target.value })}
-                  className={inputClass}
-                >
-                  {CONTENT_TYPES.map((t) => (
-                    <option key={t} value={t}>{TYPE_LABELS[t]}</option>
-                  ))}
-                </select>
-              </Field>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <Field label="Type">
+              <select
+                className={inputClass}
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value })}
+              >
+                {CONTENT_TYPES.map((t) => (
+                  <option key={t}>{TYPE_LABELS[t]}</option>
+                ))}
+              </select>
+            </Field>
 
-              <Field label="Title" required>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className={inputClass}
-                  placeholder="Enter content title"
-                />
-              </Field>
-            </div>
-
-            <Field label="Content" required>
-              <textarea
-                value={form.content}
-                onChange={(e) => setForm({ ...form, content: e.target.value })}
-                className={`${inputClass} min-h-[100px]`}
-                placeholder="Enter content body text"
+            <Field label="Title">
+              <input
+                className={inputClass}
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
             </Field>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              <Field label="Image URL (optional)">
-                <input
-                  type="url"
-                  value={form.imageUrl}
-                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                  className={inputClass}
-                  placeholder="https://…"
-                />
-              </Field>
-              <Field label="Display Start (optional)">
-                <input
-                  type="datetime-local"
-                  value={form.startAt}
-                  onChange={(e) => setForm({ ...form, startAt: e.target.value })}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Display End (optional)">
-                <input
-                  type="datetime-local"
-                  value={form.endAt}
-                  onChange={(e) => setForm({ ...form, endAt: e.target.value })}
-                  className={inputClass}
-                />
-              </Field>
-            </div>
+            <Field label="Content">
+              <textarea
+                className={`${inputClass} min-h-[100px]`}
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+              />
+            </Field>
 
-            <div className="flex gap-2">
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="bg-institution-600 hover:bg-institution-700 text-white"
-              >
-                {submitting ? "Creating…" : "Create Content"}
-              </Button>
-              <Button
-                type="button"
-                onClick={() => { setShowForm(false); setForm(emptyForm); }}
-                className="bg-slate-200 text-slate-700 hover:bg-slate-300"
-              >
-                Cancel
-              </Button>
-            </div>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Creating..." : "Create"}
+            </Button>
           </form>
         </Panel>
       )}
 
-      {/* Content List */}
+      {/* LIST */}
       <Panel>
-        <h2 className="text-lg font-semibold mb-4">
-          {loading ? "Loading…" : `${contents.length} Content Items`}
+        <h2 className="font-semibold mb-4">
+          {loading ? "Loading..." : `${contents.length} items`}
         </h2>
 
-        {loading ? (
-          <p className="text-slate-500 text-sm">Loading content…</p>
-        ) : contents.length === 0 ? (
-          <p className="text-slate-500 text-center py-8 text-sm">
-            No content created yet. Click "Add Content" to get started.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {contents.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition"
+        {contents.map((item) => (
+          <div
+            key={item.id}
+            className="p-4 border rounded-lg mb-3 flex justify-between"
+          >
+            {/* LEFT */}
+            <div className="flex-1">
+              <h3 className="font-semibold">{item.title}</h3>
+
+              <p className="text-sm text-slate-600">{item.content}</p>
+
+              <p className="text-xs text-slate-500 mt-2">
+                Created by: {item.createdBy}
+              </p>
+
+              <p className="text-xs text-slate-500">
+                {new Date(item.createdAt).toLocaleString()}
+              </p>
+
+              <p className="text-xs text-slate-500">
+                {item.startAt
+                  ? new Date(item.startAt).toDateString()
+                  : "No start"}{" "}
+                → {item.endAt ? new Date(item.endAt).toDateString() : "No end"}
+              </p>
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex items-center gap-3">
+              <button onClick={() => handleToggle(item.id)}>
+                {item.isActive ? (
+                  <ToggleRight className="text-green-600" />
+                ) : (
+                  <ToggleLeft />
+                )}
+              </button>
+
+              <button
+                onClick={() => handleDelete(item.id)}
+                className="text-red-500"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-slate-900">{item.title}</h3>
-                      <span
-                        className={`px-2 py-0.5 text-xs font-semibold rounded ${
-                          TYPE_COLORS[item.type] ?? "bg-slate-200 text-slate-700"
-                        }`}
-                      >
-                        {TYPE_LABELS[item.type] ?? item.type}
-                      </span>
-                      {item.isActive !== undefined && (
-                        <span
-                          className={`px-2 py-0.5 text-xs font-semibold rounded ${
-                            item.isActive
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-slate-100 text-slate-500"
-                          }`}
-                        >
-                          {item.isActive ? "Active" : "Inactive"}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-slate-600 mt-1 line-clamp-2">{item.content}</p>
-                    <p className="text-xs text-slate-400 mt-2">
-                      Created: {new Date(item.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleToggle(item.id)}
-                    className="text-slate-500 hover:text-institution-600 transition flex-shrink-0"
-                    title={item.isActive ? "Deactivate" : "Activate"}
-                  >
-                    {item.isActive ? (
-                      <ToggleRight size={28} className="text-emerald-600" />
-                    ) : (
-                      <ToggleLeft size={28} />
-                    )}
-                  </button>
-                </div>
-              </div>
-            ))}
+                <Trash2 size={18} />
+              </button>
+            </div>
           </div>
-        )}
+        ))}
       </Panel>
     </div>
   );

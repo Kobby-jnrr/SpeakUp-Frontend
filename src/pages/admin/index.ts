@@ -8,3 +8,4 @@ export { AdminSettingsPage } from "./AdminSettingsPage";
 export { AdminChatPage } from "./AdminChatPage";
 export { AdminHomePageContentPage } from "./AdminHomePageContentPage";
 export { default as CreateJuniorAdminPage } from "./CreateJuniorAdminPage";
+export { UsersPage as Users } from "./Users";

@@ -39,43 +39,86 @@ SpeakUp-Frontend/
 ├── src/
 │   ├── api/
 │   │   ├── api.ts                          # Axios instance with JWT interceptor
+│   │   ├── adminService.ts                 # Admin-specific backend endpoints
 │   │   ├── authService.ts                  # Auth endpoints (login/register)
 │   │   ├── chatConversationService.ts      # Chat conversation endpoints
 │   │   ├── chatMessageService.ts           # Chat message endpoints
 │   │   ├── homepageService.ts              # Homepage content endpoints
-│   │   └── reportService.ts                # Report CRUD endpoints
+│   │   ├── reportService.ts                # Report CRUD endpoints
+│   │   └── userService.ts                  # User management endpoints
 │   ├── components/
 │   │   ├── chat/
 │   │   │   ├── ChatConversationList.tsx    # Conversation list sidebar
 │   │   │   └── ChatWindow.tsx              # Message display & input
 │   │   ├── layout/
+│   │   │   ├── AdminLayout.tsx            # Admin shell layout
+│   │   │   ├── AppLayout.tsx              # Shared application shell
+│   │   │   ├── ProtectedRoute.tsx         # Role-based route guard
+│   │   │   └── StudentLayout.tsx          # Student shell layout
 │   │   ├── notifications/
+│   │   │   └── NotificationCard.tsx       # Notification UI card
 │   │   ├── reports/
+│   │   │   ├── ReportForm.tsx             # Report submission form
+│   │   │   └── Timeline.tsx               # Report timeline view
 │   │   ├── resources/
+│   │   │   └── ResourceCard.tsx           # Resource card item
 │   │   └── ui/
+│   │       ├── Badges.tsx
+│   │       ├── Button.tsx
+│   │       ├── Cards.tsx
+│   │       ├── Form.tsx
+│   │       ├── Modal.tsx
+│   │       └── Toast.tsx
 │   ├── context/
-│   │   └── AppContext.tsx                  # Global state
-│   ├── mock/
+│   │   └── AppContext.tsx                  # Global app state and auth context
 │   ├── pages/
 │   │   ├── AdminPages.tsx
 │   │   ├── LoginPage.tsx
 │   │   ├── PublicPages.tsx
 │   │   ├── SignupPage.tsx
 │   │   ├── admin/
-│   │   │   ├── AdminChatPage.tsx           # Chat queue management
-│   │   │   └── AdminHomePageContentPage.tsx # Content editor
-│   │   └── student/
-│   │       ├── StudentChatPage.tsx         # Student messaging
-│   │       └── [other student pages]
+│   │   │   ├── AdminChatPage.tsx
+│   │   │   ├── AdminDashboardPage.tsx
+│   │   │   ├── AdminHomePageContentPage.tsx
+│   │   │   ├── AdminNotificationsPage.tsx
+│   │   │   ├── AdminReportDetailsPage.tsx
+│   │   │   ├── AdminReportsPage.tsx
+│   │   │   ├── AdminResourcesPage.tsx
+│   │   │   ├── AdminSettingsPage.tsx
+│   │   │   ├── CreateJuniorAdminPage.tsx
+│   │   │   └── Users.tsx
+│   │   ├── student/
+│   │   │   ├── EmergencyPage.tsx
+│   │   │   ├── StudentAboutPage.tsx
+│   │   │   ├── StudentChatPage.tsx
+│   │   │   ├── StudentContactPage.tsx
+│   │   │   ├── StudentDashboard.tsx
+│   │   │   ├── StudentFAQsPage.tsx
+│   │   │   ├── StudentHomePage.tsx
+│   │   │   ├── StudentNotificationsPage.tsx
+│   │   │   ├── StudentPrivacyPage.tsx
+│   │   │   ├── StudentReportDetailsPage.tsx
+│   │   │   ├── StudentReportPage.tsx
+│   │   │   ├── StudentReportsPage.tsx
+│   │   │   ├── StudentResourcePage.tsx
+│   │   │   ├── StudentSettingsPage.tsx
+│   │   │   └── index.ts
 │   ├── types/
+│   │   └── index.ts
 │   ├── utils/
+│   │   ├── auth.ts
+│   │   ├── format.ts
+│   │   └── roleMapper.ts
 │   ├── App.tsx
 │   ├── main.tsx
-│   └── index.css
+│   ├── index.css
+│   └── vite-env.d.ts
 ├── index.html
 ├── package.json
 ├── tailwind.config.js
+├── tsconfig.app.json
 ├── tsconfig.json
+├── tsconfig.node.json
 └── vite.config.ts
 ```
 
@@ -87,7 +130,7 @@ SpeakUp-Frontend/
 
 - JWT token-based (localStorage)
 - Axios interceptor auto-injects Authorization header
-- ProtectedRouteMock validates token before rendering
+- `ProtectedRoute` validates role-based access before rendering
 
 ### API Endpoints
 
@@ -134,25 +177,33 @@ SpeakUp-Frontend/
 
 ### Student Routes (/student)
 
-- `/home` - Dashboard
-- `/dashboard` - Main dashboard
-- `/report` - Submit report
+- `/home` - Student landing page
+- `/dashboard` - Student dashboard overview
+- `/report` - Submit a new report
 - `/my-reports` - Report list
-- `/report/:id` - Report details
-- `/chat` - Messaging ✨ NEW
-- `/notifications` - Notifications
-- `/resources` - Guides
-- `/settings` - Preferences
+- `/reports/:id` - Report details
+- `/emergency` - Emergency support page
+- `/resources` - Guides and resources
+- `/faqs` - Frequently asked questions
+- `/privacy` - Privacy policy
+- `/about` - About the platform
+- `/contact` - Contact support
+- `/notifications` - Notifications center
+- `/settings` - Student account settings
+- `/chat` - Student chat interface
 
 ### Admin Routes (/admin)
 
-- `/dashboard` - Operational view
+- `/dashboard` - Operational overview
 - `/reports` - Report management
-- `/resources` - Resource mgmt
-- `/notifications` - Alerts
-- `/settings` - Admin settings
-- `/chat` - Chat queue ✨ NEW
-- `/homepage-content` - Content editor ✨ NEW
+- `/reports/:id` - Report details
+- `/resources` - Resource management
+- `/notifications` - Admin notifications
+- `/settings` - Admin account settings
+- `/chat` - Admin chat queue
+- `/homepage-content` - Homepage content editor
+- `/users` - Junior admin / user management
+- `/create-junior-admin` - SuperAdmin-only create junior admin page
 
 ---
 

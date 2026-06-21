@@ -55,7 +55,11 @@ export function StudentDashboard() {
         const res = await reportService.getMyReports();
         setReports(res.data);
       } catch {
-        addToast({ title: "Error", message: "Could not load your reports", tone: "error" });
+        addToast({
+          title: "Error",
+          message: "Could not load your reports",
+          tone: "error",
+        });
       } finally {
         setLoading(false);
       }
@@ -110,11 +114,10 @@ export function StudentDashboard() {
       <div className="grid gap-5 xl:grid-cols-[1fr_250px]">
         <div className="rounded-md border bg-white p-6">
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            Welcome back, {currentUser?.firstName}
-            <Hand className="h-6 w-6 text-amber-500" />
+            My Dashboard
           </h1>
           <p className="mt-3 text-sm text-slate-600">
-            We're here to support you. Your safety and well-being matter.
+            Overview of your reports and activity
           </p>
           <div className="mt-6 flex gap-3">
             <Link to="/student/report">
@@ -186,7 +189,10 @@ export function StudentDashboard() {
         <Panel className="p-0">
           <div className="border-b px-5 py-4 flex justify-between items-center">
             <h2 className="font-bold text-slate-950">Recent Reports</h2>
-            <Link to="/student/my-reports" className="text-sm text-institution-600 hover:underline">
+            <Link
+              to="/student/my-reports"
+              className="text-sm text-institution-600 hover:underline"
+            >
               View all
             </Link>
           </div>
@@ -203,20 +209,28 @@ export function StudentDashboard() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-slate-400 text-sm">
+                    <td
+                      colSpan={4}
+                      className="px-4 py-6 text-center text-slate-400 text-sm"
+                    >
                       Loading reports…
                     </td>
                   </tr>
                 ) : recentReports.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-slate-400 text-sm">
+                    <td
+                      colSpan={4}
+                      className="px-4 py-6 text-center text-slate-400 text-sm"
+                    >
                       No reports yet.
                     </td>
                   </tr>
                 ) : (
                   recentReports.map((r) => (
                     <tr key={r.id} className="border-t hover:bg-slate-50">
-                      <td className="px-4 py-3 text-slate-400 text-xs">#{r.id}</td>
+                      <td className="px-4 py-3 text-slate-400 text-xs">
+                        #{r.id}
+                      </td>
                       <td className="px-4 py-3">
                         <Link
                           to={`/student/reports/${r.id}`}
@@ -267,7 +281,9 @@ export function StudentDashboard() {
             ))}
           </div>
 
-          <h2 className="font-bold text-slate-950 mt-6 mb-3">Emergency Contacts</h2>
+          <h2 className="font-bold text-slate-950 mt-6 mb-3">
+            Emergency Contacts
+          </h2>
           <div className="space-y-3">
             {contacts.map((c) => (
               <div key={c.title} className="flex gap-3">

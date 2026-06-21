@@ -5,7 +5,6 @@ import {
   ArrowRight,
   BookOpen,
   Calendar,
-  ChevronRight,
   ClipboardList,
   FilePlus,
   Files,
@@ -18,7 +17,8 @@ import { Link } from "react-router-dom";
 import { Panel } from "../../components/ui/Cards";
 import { Button } from "../../components/ui/Button";
 import { homepageService } from "../../api/homepageService";
-import type { HomePageData, HomePageContentItem } from "../../types";
+import type { HomePageData } from "../../types";
+import { useApp } from "../../context/AppContext";
 
 const quickActions = [
   {
@@ -53,14 +53,9 @@ const quickActions = [
   },
 ];
 
-const supportCards = [
-  { title: "How Reporting Works", icon: ClipboardList, to: "/student/resources", tone: "bg-blue-50 text-blue-700 border-blue-100" },
-  { title: "Know Your Rights", icon: Shield, to: "/student/resources", tone: "bg-amber-50 text-amber-700 border-amber-100" },
-  { title: "Counseling Services", icon: MessageCircle, to: "/student/resources", tone: "bg-violet-50 text-violet-700 border-violet-100" },
-  { title: "Safety Guide", icon: Lightbulb, to: "/student/resources", tone: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-];
-
 export function StudentHomePage() {
+  const { currentUser } = useApp();
+
   const [slide, setSlide] = useState(0);
   const [homeData, setHomeData] = useState<HomePageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,8 +65,6 @@ export function StudentHomePage() {
       try {
         const res = await homepageService.getHomeContent();
         setHomeData(res.data);
-      } catch {
-        // fail silently — page still renders with fallback UI
       } finally {
         setLoading(false);
       }
@@ -83,169 +76,162 @@ export function StudentHomePage() {
   const bulletins = homeData?.bulletin ?? [];
   const safetyTip = homeData?.safetyTip ?? null;
 
-  const nextSlide = () => setSlide((s) => (s + 1) % Math.max(heroSlides.length, 1));
-  const prevSlide = () => setSlide((s) => (s - 1 + Math.max(heroSlides.length, 1)) % Math.max(heroSlides.length, 1));
+  const nextSlide = () =>
+    setSlide((s) => (s + 1) % Math.max(heroSlides.length, 1));
+  const prevSlide = () =>
+    setSlide(
+      (s) =>
+        (s - 1 + Math.max(heroSlides.length, 1)) %
+        Math.max(heroSlides.length, 1),
+    );
+
+  /* =========================
+     🔥 SKELETON UI
+  ========================= */
+  const Skeleton = () => (
+    <div className="animate-pulse space-y-6">
+      {/* HERO SKELETON */}
+      <div className="h-[300px] rounded-xl bg-slate-200" />
+
+      {/* QUICK ACTIONS SKELETON */}
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {Array(5)
+          .fill(0)
+          .map((_, i) => (
+            <div key={i} className="h-20 rounded-xl bg-slate-200" />
+          ))}
+      </div>
+
+      {/* PANELS SKELETON */}
+      <div className="grid md:grid-cols-2 gap-5">
+        <div className="h-[200px] rounded-xl bg-slate-200" />
+
+        <div className="space-y-3">
+          <div className="h-[120px] rounded-xl bg-slate-200" />
+          <div className="h-[120px] rounded-xl bg-slate-200" />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
-      {/* HERO SLIDER */}
-      <div className="relative overflow-hidden rounded-xl">
-        <div className="relative h-[300px] bg-slate-900">
-          {loading ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-white/60 text-sm">Loading announcements…</p>
-            </div>
-          ) : heroSlides.length === 0 ? (
-            <div className="relative p-10 text-white h-full flex flex-col justify-center">
-              <span className="text-xs uppercase tracking-widest text-white/60">Welcome</span>
-              <h2 className="text-3xl font-bold mt-2">SpeakUp — Your Voice Matters</h2>
-              <p className="mt-2 text-sm text-white/80">
-                A safe, confidential platform to report incidents and get support.
-              </p>
-              <div className="mt-6">
-                <Link to="/student/report">
-                  <Button>Submit a Report</Button>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <>
-              {heroSlides[slide]?.imageUrl && (
-                <img
-                  src={heroSlides[slide].imageUrl!}
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover opacity-30"
-                />
-              )}
-              <div className="relative p-10 text-white h-full flex flex-col justify-center">
-                <span className="text-xs uppercase tracking-widest text-white/70">
-                  Announcement
-                </span>
-                <h2 className="text-2xl font-bold mt-2">{heroSlides[slide].title}</h2>
-                <p className="mt-2 text-sm text-white/80 max-w-lg">
-                  {heroSlides[slide].content}
-                </p>
-                <div className="mt-4 flex items-center gap-3">
-                  <span className="text-xs flex items-center gap-1 text-white/60">
-                    <Calendar className="h-4 w-4" />
-                    {new Date(heroSlides[slide].createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
+      {/* ✅ WELCOME */}
+      <div className="px-1 animate-fade-in">
+        <h1 className="text-xl font-bold text-slate-900">
+          Welcome back, {currentUser?.firstName}
+        </h1>
+      </div>
 
-              {/* Slide controls */}
-              {heroSlides.length > 1 && (
-                <>
-                  <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
-                    {heroSlides.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setSlide(i)}
-                        className={`h-2 w-2 rounded-full transition ${
-                          i === slide ? "bg-white" : "bg-white/40"
-                        }`}
-                      />
-                    ))}
+      {/* LOADING STATE */}
+      {loading ? (
+        <Skeleton />
+      ) : (
+        <div className="animate-fade-in space-y-6">
+          {/* HERO SLIDER */}
+          <div className="relative overflow-hidden rounded-xl">
+            <div className="relative h-[300px] bg-slate-900">
+              {heroSlides.length === 0 ? (
+                <div className="p-10 text-white h-full flex flex-col justify-center">
+                  <h2 className="text-3xl font-bold">
+                    SpeakUp — Your Voice Matters
+                  </h2>
+                  <p className="mt-2 text-sm text-white/80">
+                    A safe, confidential platform to report incidents and get
+                    support.
+                  </p>
+                  <div className="mt-6">
+                    <Link to="/student/report">
+                      <Button>Submit a Report</Button>
+                    </Link>
                   </div>
-                  <button
-                    onClick={prevSlide}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 p-1 rounded-full bg-white/20 hover:bg-white/30 text-white transition"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={nextSlide}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full bg-white/20 hover:bg-white/30 text-white transition"
-                  >
-                    <ArrowRight className="h-5 w-5" />
-                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="relative p-10 text-white h-full flex flex-col justify-center">
+                    <h2 className="text-2xl font-bold">
+                      {heroSlides[slide].title}
+                    </h2>
+                    <p className="mt-2 text-sm text-white/80 max-w-lg">
+                      {heroSlides[slide].content}
+                    </p>
+                  </div>
+
+                  {heroSlides.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevSlide}
+                        className="absolute left-3 top-1/2"
+                      >
+                        <ArrowLeft />
+                      </button>
+                      <button
+                        onClick={nextSlide}
+                        className="absolute right-3 top-1/2"
+                      >
+                        <ArrowRight />
+                      </button>
+                    </>
+                  )}
                 </>
               )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* QUICK ACTIONS */}
-      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {quickActions.map((a) => (
-          <Link
-            key={a.title}
-            to={a.to}
-            className={`p-4 border rounded-xl flex flex-col items-start gap-2 hover:opacity-90 transition ${a.tone}`}
-          >
-            <a.icon className="h-5 w-5" />
-            <p className="text-sm font-bold">{a.title}</p>
-          </Link>
-        ))}
-      </div>
-
-      {/* BULLETIN + SAFETY TIP */}
-      <div className="grid md:grid-cols-2 gap-5">
-        {/* Bulletin Board */}
-        <Panel>
-          <h2 className="font-bold text-slate-950 mb-3 flex items-center gap-2">
-            <Megaphone className="h-4 w-4 text-blue-600" /> Bulletin Board
-          </h2>
-          {loading ? (
-            <p className="text-sm text-slate-400">Loading bulletins…</p>
-          ) : bulletins.length === 0 ? (
-            <p className="text-sm text-slate-400">No bulletins at this time.</p>
-          ) : (
-            <div className="space-y-3">
-              {bulletins.map((b) => (
-                <div key={b.id} className="flex gap-3 py-2 border-b last:border-0">
-                  <div className="flex-shrink-0 w-1 rounded-full bg-blue-400" />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">{b.title}</p>
-                    <p className="text-sm text-slate-600">{b.content}</p>
-                    <span className="text-xs text-slate-400">
-                      {new Date(b.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
             </div>
-          )}
-        </Panel>
+          </div>
 
-        {/* Safety Tip */}
-        <Panel>
-          <h2 className="font-bold text-slate-950 mb-3 flex items-center gap-2">
-            <Lightbulb className="h-4 w-4 text-amber-500" /> Safety Tip
-          </h2>
-          {loading ? (
-            <p className="text-sm text-slate-400">Loading tip…</p>
-          ) : safetyTip ? (
-            <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
-              <p className="font-bold text-amber-900">{safetyTip.title}</p>
-              <p className="text-sm text-amber-800 mt-1">{safetyTip.content}</p>
-            </div>
-          ) : (
-            <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
-              <p className="font-bold text-amber-900">Trust your instincts.</p>
-              <p className="text-sm text-amber-800 mt-1">
-                If something feels wrong, remove yourself from the situation and seek help immediately.
-              </p>
-            </div>
-          )}
-
-          {/* Support cards */}
-          <h2 className="font-bold text-slate-950 mt-6 mb-3">Support Resources</h2>
-          <div className="grid grid-cols-2 gap-2">
-            {supportCards.map((c) => (
+          {/* QUICK ACTIONS */}
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {quickActions.map((a) => (
               <Link
-                key={c.title}
-                to={c.to}
-                className={`p-3 border rounded-lg flex items-center gap-2 text-sm font-semibold hover:opacity-90 transition ${c.tone}`}
+                key={a.title}
+                to={a.to}
+                className={`p-4 border rounded-xl ${a.tone}`}
               >
-                <c.icon className="h-4 w-4 flex-shrink-0" />
-                <span>{c.title}</span>
+                <a.icon className="h-5 w-5" />
+                <p className="text-sm font-bold">{a.title}</p>
               </Link>
             ))}
           </div>
-        </Panel>
-      </div>
+
+          {/* BULLETIN + SAFETY TIP */}
+          <div className="grid md:grid-cols-2 gap-5">
+            {/* Bulletin */}
+            <Panel>
+              <h2 className="font-bold flex items-center gap-2">
+                <Megaphone className="h-4 w-4 text-blue-600" />
+                Bulletin Board
+              </h2>
+
+              <div className="space-y-3 mt-3">
+                {bulletins.map((b) => (
+                  <div key={b.id} className="border-b pb-2">
+                    <p className="font-semibold text-sm">{b.title}</p>
+                    <p className="text-sm text-slate-600">{b.content}</p>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+
+            {/* Safety Tip */}
+            <Panel>
+              <h2 className="font-bold flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-amber-500" />
+                Safety Tip
+              </h2>
+
+              {safetyTip ? (
+                <div className="bg-amber-50 p-4 rounded-lg mt-3">
+                  <p className="font-bold">{safetyTip.title}</p>
+                  <p className="text-sm">{safetyTip.content}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-600 mt-3">
+                  Stay aware and trust your instincts.
+                </p>
+              )}
+            </Panel>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

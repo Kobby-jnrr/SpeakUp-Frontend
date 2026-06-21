@@ -73,6 +73,18 @@ export interface Conversation {
   createdAt: string;
   lastMessage?: string | null;
   lastMessageTime?: string | null;
+
+  student?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+  } | null;
+
+  assignedAdmin?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+  } | null;
 }
 
 /** Matches the ChatMessage model returned by /api/ChatMessage/{conversationId} */

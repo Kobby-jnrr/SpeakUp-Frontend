@@ -16,6 +16,7 @@ import {
   AdminChatPage,
   AdminHomePageContentPage,
   CreateJuniorAdminPage,
+  Users,
 } from "./pages/admin";
 
 // ================= STUDENT PAGES =================
@@ -200,6 +201,15 @@ export default function App() {
           }
         />
 
+        <Route
+          path="/student/chat/:conversationId"
+          element={
+            <StudentShell>
+              <StudentChatPage />
+            </StudentShell>
+          }
+        />
+
         {/* ================= JUNIOR ADMIN ================= */}
         <Route
           path="/admin"
@@ -270,10 +280,28 @@ export default function App() {
         />
 
         <Route
+          path="/admin/chat/:conversationId"
+          element={
+            <JuniorAdminShell>
+              <AdminChatPage />
+            </JuniorAdminShell>
+          }
+        />
+
+        <Route
           path="/admin/homepage-content"
           element={
             <JuniorAdminShell>
               <AdminHomePageContentPage />
+            </JuniorAdminShell>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <JuniorAdminShell>
+              <Users />
             </JuniorAdminShell>
           }
         />

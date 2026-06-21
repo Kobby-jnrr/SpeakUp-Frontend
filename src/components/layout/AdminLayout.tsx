@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   UserPlus,
+  User,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -27,6 +28,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
   const links = [
     { to: "/admin/dashboard", label: "Dashboard", icon: Home },
+    { to: "/admin/users", label: "Users", icon: User },
     { to: "/admin/reports", label: "Reports", icon: FileText },
     { to: "/admin/chat", label: "Chat", icon: MessageSquare },
     { to: "/admin/homepage-content", label: "Homepage Content", icon: Zap },

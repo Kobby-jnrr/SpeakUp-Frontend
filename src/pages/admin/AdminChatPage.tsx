@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { MessageSquare, Check, UserPlus } from "lucide-react";
+import { MessageSquare, UserPlus, Check } from "lucide-react";
+
 import { ChatWindow } from "../../components/chat/ChatWindow";
 import { Button } from "../../components/ui/Button";
 import { Panel } from "../../components/ui/Cards";
+
 import { useApp } from "../../context/AppContext";
 import { chatConversationService } from "../../api/chatConversationService";
 import type { Conversation } from "../../types";
@@ -11,7 +13,10 @@ type ViewTab = "all" | "unassigned" | "assigned";
 
 export function AdminChatPage() {
   const { addToast, currentUser } = useApp();
-  const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null);
+
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    number | null
+  >(null);
   const [view, setView] = useState<ViewTab>("all");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -20,6 +25,7 @@ export function AdminChatPage() {
     setLoading(true);
     try {
       let res;
+
       if (view === "unassigned") {
         res = await chatConversationService.getUnassigned();
       } else if (view === "assigned") {
@@ -27,11 +33,15 @@ export function AdminChatPage() {
       } else {
         res = await chatConversationService.getAllAdmin();
       }
-      // Both paginated and plain array responses handled
+
       const data = res.data;
-      setConversations(Array.isArray(data) ? data : data.items ?? []);
+      setConversations(Array.isArray(data) ? data : (data.items ?? []));
     } catch {
-      addToast({ title: "Error", message: "Failed to load conversations", tone: "error" });
+      addToast({
+        title: "Error",
+        message: "Failed to load conversations",
+        tone: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -41,14 +51,41 @@ export function AdminChatPage() {
     loadConversations();
   }, [view]);
 
-  const handleClaimConversation = async (convId: number) => {
+  // ✅ DISPLAY NAME LOGIC (IMPORTANT)
+  const getChatName = (c: Conversation) => {
+    if (c.isAnonymous) return "Anonymous User";
+
+    const studentName = c.student
+      ? `${c.student.firstName} ${c.student.lastName}`
+      : null;
+
+    const adminName = c.assignedAdmin
+      ? `${c.assignedAdmin.firstName} ${c.assignedAdmin.lastName}`
+      : null;
+
+    // Admin view: show student
+    return studentName || adminName || `Chat #${c.id}`;
+  };
+
+  const currentConversation = conversations.find(
+    (c) => c.id === selectedConversationId,
+  );
+
+  const handleClaim = async (convId: number) => {
     try {
       await chatConversationService.assignAdmin({
         conversationId: convId,
         adminId: Number(currentUser?.id),
       });
-      addToast({ title: "Assigned", message: "Conversation assigned to you", tone: "success" });
-      loadConversations();
+
+      addToast({
+        title: "Assigned",
+        message: "Conversation assigned to you",
+        tone: "success",
+      });
+
+      await loadConversations();
+      setSelectedConversationId(convId);
     } catch (err: any) {
       addToast({
         title: "Error",
@@ -58,23 +95,28 @@ export function AdminChatPage() {
     }
   };
 
-  const handleCloseConversation = async () => {
+  const handleClose = async () => {
     if (!selectedConversationId) return;
+
     try {
       await chatConversationService.closeConversation(selectedConversationId);
-      addToast({ title: "Closed", message: "Conversation has been closed", tone: "success" });
+
+      addToast({
+        title: "Closed",
+        message: "Conversation closed",
+        tone: "success",
+      });
+
       setSelectedConversationId(null);
       loadConversations();
     } catch (err: any) {
       addToast({
         title: "Error",
-        message: err.response?.data || "Could not close conversation",
+        message: err.response?.data || "Could not close chat",
         tone: "error",
       });
     }
   };
-
-  const currentConversation = conversations.find((c) => c.id === selectedConversationId);
 
   const tabs: { key: ViewTab; label: string }[] = [
     { key: "all", label: "All Chats" },
@@ -84,19 +126,20 @@ export function AdminChatPage() {
 
   return (
     <div className="space-y-6">
+      {/* HEADER */}
       <Panel className="border-institution-100 bg-institution-50">
         <div className="flex items-center gap-3">
           <MessageSquare className="text-institution-600" size={32} />
           <div>
-            <h1 className="text-2xl font-bold text-slate-950">Chat Management</h1>
-            <p className="text-sm text-slate-700">
-              Manage student conversations and support requests
+            <h1 className="text-2xl font-bold">Chat Management</h1>
+            <p className="text-sm text-slate-600">
+              Manage student support conversations
             </p>
           </div>
         </div>
       </Panel>
 
-      {/* View Tabs */}
+      {/* TABS */}
       <div className="flex gap-2">
         {tabs.map((t) => (
           <Button
@@ -105,107 +148,76 @@ export function AdminChatPage() {
               setView(t.key);
               setSelectedConversationId(null);
             }}
-            className={`capitalize ${
+            className={
               view === t.key
                 ? "bg-institution-600 text-white"
-                : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-            }`}
+                : "bg-slate-200 text-slate-700"
+            }
           >
             {t.label}
           </Button>
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Conversation List */}
-        <div className="lg:col-span-1">
-          <Panel>
-            <h2 className="font-semibold text-slate-950 mb-4">
-              {loading ? "Loading…" : `${conversations.length} Conversations`}
-            </h2>
-            {loading ? (
-              <p className="text-slate-600 text-sm">Loading…</p>
-            ) : conversations.length === 0 ? (
-              <p className="text-slate-600 text-center py-8 text-sm">
-                No conversations in this view
-              </p>
-            ) : (
-              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-                {conversations.map((conv) => (
-                  <div key={conv.id} className="space-y-1">
-                    <button
-                      onClick={() => setSelectedConversationId(conv.id)}
-                      className={`w-full text-left p-3 rounded-md border transition ${
-                        selectedConversationId === conv.id
-                          ? "border-institution-700 bg-institution-50"
-                          : "border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm text-slate-900">
-                            {conv.chatType} {conv.isAnonymous && "(Anon)"}
-                          </div>
-                          {conv.lastMessage && (
-                            <p className="text-xs text-slate-500 truncate mt-0.5">
-                              {conv.lastMessage}
-                            </p>
-                          )}
-                          <div className="text-xs text-slate-400 mt-1">
-                            {new Date(conv.createdAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                        <span
-                          className={`px-2 py-0.5 text-xs font-semibold rounded whitespace-nowrap ${
-                            conv.status === "Open"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-slate-200 text-slate-700"
-                          }`}
-                        >
-                          {conv.status}
-                        </span>
-                      </div>
-                    </button>
-                    {view === "unassigned" && (
-                      <button
-                        onClick={() => handleClaimConversation(conv.id)}
-                        className="w-full flex items-center justify-center gap-1 text-xs py-1 rounded bg-institution-50 text-institution-700 hover:bg-institution-100 border border-institution-200 transition"
-                      >
-                        <UserPlus size={12} /> Assign to me
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </Panel>
-        </div>
+      {/* MAIN */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* LIST */}
+        <Panel className="lg:col-span-1">
+          <h2 className="font-semibold mb-4">
+            {loading ? "Loading..." : `${conversations.length} Conversations`}
+          </h2>
 
-        {/* Chat Window */}
+          {conversations.map((conv) => (
+            <button
+              key={conv.id}
+              onClick={() => setSelectedConversationId(conv.id)}
+              className={`w-full text-left p-3 border rounded mb-2 ${
+                selectedConversationId === conv.id
+                  ? "border-institution-700 bg-institution-50"
+                  : "border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              {/* 👇 CHAT NAME HERE */}
+              <div className="font-semibold text-sm">{getChatName(conv)}</div>
+
+              <div className="text-xs text-slate-500">{conv.chatType}</div>
+
+              {conv.lastMessage && (
+                <p className="text-xs text-slate-400 truncate">
+                  {conv.lastMessage}
+                </p>
+              )}
+            </button>
+          ))}
+        </Panel>
+
+        {/* CHAT WINDOW */}
         <div className="lg:col-span-2">
           {selectedConversationId ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-slate-950">
-                  {currentConversation?.chatType}
-                  {currentConversation?.isAnonymous && " (Anonymous)"}
+            <div className="space-y-3">
+              {/* 👇 TOP HEADER NAME */}
+              <div className="flex justify-between items-center">
+                <h2 className="font-semibold">
+                  {getChatName(currentConversation!)}
                 </h2>
+
                 {currentConversation?.status === "Open" && (
                   <Button
-                    onClick={handleCloseConversation}
-                    className="bg-slate-600 hover:bg-slate-700 text-white text-sm"
+                    onClick={handleClose}
+                    className="bg-slate-600 text-white text-sm"
                   >
-                    <Check size={16} className="mr-1" />
-                    Close Chat
+                    <Check size={14} />
+                    Close
                   </Button>
                 )}
               </div>
+
               <ChatWindow conversationId={selectedConversationId} />
             </div>
           ) : (
-            <Panel className="text-center py-12">
-              <MessageSquare className="mx-auto text-slate-300 mb-4" size={48} />
-              <p className="text-slate-500">Select a conversation to start</p>
+            <Panel className="text-center py-12 text-slate-500">
+              <MessageSquare className="mx-auto mb-3" />
+              Select a conversation
             </Panel>
           )}
         </div>

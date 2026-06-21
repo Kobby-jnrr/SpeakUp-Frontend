@@ -8,4 +8,6 @@ export const homepageService = {
   createContent: (data: any) => api.post("/HomePageContent/create", data),
 
   toggleContent: (id: number) => api.put(`/HomePageContent/toggle/${id}`),
+
+  deleteContent: (id: number) => api.delete(`/HomePageContent/${id}`),
 };

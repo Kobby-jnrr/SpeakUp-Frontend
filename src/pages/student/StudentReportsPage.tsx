@@ -23,18 +23,23 @@ export function StudentReportsPage() {
         const res = await reportService.getMyReports();
         setReports(res.data);
       } catch {
-        addToast({ title: "Error", message: "Could not load your reports", tone: "error" });
+        addToast({
+          title: "Error",
+          message: "Could not load your reports",
+          tone: "error",
+        });
       } finally {
         setLoading(false);
       }
     };
+
     load();
   }, []);
 
   const filtered = useMemo(() => {
     return reports
       .filter((r) =>
-        [r.id, r.title, r.department, r.incidentLocation, r.status]
+        [r.title, r.department, r.incidentLocation, r.status]
           .join(" ")
           .toLowerCase()
           .includes(query.toLowerCase()),
@@ -54,9 +59,10 @@ export function StudentReportsPage() {
           <div>
             <h1 className="text-2xl font-bold text-slate-950">My Reports</h1>
             <p className="mt-2 text-sm text-slate-600">
-              Track submitted reports, counselor responses, and current review state.
+              Track submitted reports, admin response, and progress updates.
             </p>
           </div>
+
           <Link to="/student/report">
             <Button>
               <FilePlus className="h-4 w-4" /> New Report
@@ -72,12 +78,20 @@ export function StudentReportsPage() {
               placeholder="Search reports…"
             />
           </div>
+
           <FilterDropdown
             label="Status"
             value={status}
             onChange={setStatus}
-            options={["All statuses", "Pending", "InProgress", "Resolved", "Closed"]}
+            options={[
+              "All statuses",
+              "Pending",
+              "InProgress",
+              "Resolved",
+              "Closed",
+            ]}
           />
+
           <FilterDropdown
             label="Sort"
             value={sort}
@@ -99,7 +113,7 @@ export function StudentReportsPage() {
       ) : filtered.length === 0 ? (
         <EmptyState
           title="No matching reports"
-          message="Adjust your search or filters to see more results."
+          message="Adjust your search or filters."
         />
       ) : (
         <Panel className="p-0">
@@ -107,27 +121,35 @@ export function StudentReportsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-slate-500 border-b bg-slate-50">
-                  <th className="px-4 py-3">ID</th>
                   <th className="px-4 py-3">Title</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Nature</th>
                   <th className="px-4 py-3">Incident Date</th>
+                  <th className="px-4 py-3">Assigned Admin</th>
                   <th className="px-4 py-3">Submitted</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
+
               <tbody>
                 {filtered.map((r) => (
-                  <tr key={r.id} className="border-t hover:bg-slate-50 transition">
-                    <td className="px-4 py-3 text-slate-400 text-xs">#{r.id}</td>
+                  <tr
+                    key={r.id}
+                    className="border-t hover:bg-slate-50 transition"
+                  >
                     <td className="px-4 py-3">
-                      <span className="font-medium text-slate-900">{r.title}</span>
+                      <span className="font-medium text-slate-900">
+                        Formal Complaint
+                      </span>
+
                       {r.confidential && (
                         <span className="ml-2 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
                           Confidential
                         </span>
                       )}
                     </td>
+
+                    {/* STATUS */}
                     <td className="px-4 py-3">
                       <span
                         className={`px-2 py-0.5 rounded text-xs font-semibold ${
@@ -143,17 +165,34 @@ export function StudentReportsPage() {
                         {r.status}
                       </span>
                     </td>
+
+                    {/* NATURE */}
                     <td className="px-4 py-3 text-slate-600 text-xs">
                       {Array.isArray(r.complaintNature)
                         ? r.complaintNature.slice(0, 2).join(", ")
                         : r.complaintNature || "—"}
                     </td>
+
+                    {/* INCIDENT DATE */}
                     <td className="px-4 py-3 text-slate-500 text-xs">
-                      {r.incidentDate ? new Date(r.incidentDate).toLocaleDateString() : "—"}
+                      {r.incidentDate
+                        ? new Date(r.incidentDate).toLocaleDateString()
+                        : "—"}
                     </td>
+
+                    {/* ASSIGNED ADMIN */}
+                    <td className="px-4 py-3 text-slate-600 text-xs">
+                      {r.assignedAdmin
+                        ? `${r.assignedAdmin.firstName ?? ""} ${r.assignedAdmin.lastName ?? ""}`.trim()
+                        : "Not assigned"}
+                    </td>
+
+                    {/* SUBMITTED DATE */}
                     <td className="px-4 py-3 text-slate-500 text-xs">
                       {new Date(r.createdAt).toLocaleDateString()}
                     </td>
+
+                    {/* ACTION */}
                     <td className="px-4 py-3">
                       <Link
                         to={`/student/reports/${r.id}`}
