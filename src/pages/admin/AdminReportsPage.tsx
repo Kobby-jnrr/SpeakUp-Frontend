@@ -125,8 +125,9 @@ export function AdminReportsPage() {
                   >
                     <td className="px-4 py-3">
                       <span className="font-medium text-slate-900">
-                        {r.title}
+                        REP-{String(r.id).padStart(5, "0")}
                       </span>
+
                       {r.confidential && (
                         <span className="ml-2 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
                           Confidential

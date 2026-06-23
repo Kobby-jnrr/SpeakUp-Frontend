@@ -78,6 +78,7 @@ export interface Conversation {
   reportId?: number | null;
 
   studentName?: string | null;
+  assignedAdminId?: number | null;
   assignedAdminName?: string | null; // ✅ USE THIS
 
   student?: {

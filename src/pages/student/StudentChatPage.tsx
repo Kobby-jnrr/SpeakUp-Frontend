@@ -10,7 +10,8 @@ import { Field, inputClass } from "../../components/ui/Form";
 
 import { useApp } from "../../context/AppContext";
 import { chatConversationService } from "../../api/chatConversationService";
-import type { Conversation } from "../../types";
+import { reportService } from "../../api/reportService";
+import type { Conversation, BackendReport } from "../../types";
 
 export function StudentChatPage() {
   const { addToast } = useApp();
@@ -24,19 +25,27 @@ export function StudentChatPage() {
   const [showNewChatForm, setShowNewChatForm] = useState(false);
   const [creating, setCreating] = useState(false);
 
+  const [chatType, setChatType] = useState<"Support" | "Report">("Support");
+
+  const [reports, setReports] = useState<BackendReport[]>([]);
+  const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
 
-  const [newChat, setNewChat] = useState({
-    chatType: "Support", // ✅ default SUPPORT FIX
-    reportId: "",
-    isAnonymous: false,
-  });
+  /* ---------------- LOAD DATA ---------------- */
 
   useEffect(() => {
     const load = async () => {
-      const res = await chatConversationService.getMyConversations();
-      const data = res.data;
-      setConversations(Array.isArray(data) ? data : (data.items ?? []));
+      const [chatRes, reportRes] = await Promise.all([
+        chatConversationService.getMyConversations(),
+        reportService.getMyReports(),
+      ]);
+
+      setConversations(
+        Array.isArray(chatRes.data) ? chatRes.data : (chatRes.data.items ?? []),
+      );
+
+      setReports(reportRes.data);
     };
 
     load();
@@ -45,6 +54,8 @@ export function StudentChatPage() {
   const currentConversation = conversations.find(
     (c) => c.id === selectedConversationId,
   );
+
+  /* ---------------- CHAT TITLE ---------------- */
 
   const getChatTitle = (c?: Conversation) => {
     if (!c) return "";
@@ -58,37 +69,79 @@ export function StudentChatPage() {
     return `${admin} (${report})`;
   };
 
-  const handleCreateConversation = async (e: React.FormEvent) => {
+  /* ---------------- CREATE CHAT ---------------- */
+
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
 
     try {
-      const res = await chatConversationService.createConversation({
-        chatType: newChat.chatType, // ✅ includes SUPPORT
-        isAnonymous: newChat.isAnonymous,
-        reportId: newChat.reportId ? Number(newChat.reportId) : null,
-      });
+      // ================= SUPPORT CHAT =================
+      if (chatType === "Support") {
+        const res = await chatConversationService.createConversation({
+          chatType: "Support",
+          reportId: null,
+          isAnonymous: false,
+        });
 
-      const id = res.data?.id || res.data?.Id;
+        const id = res.data?.id || res.data?.Id;
+        setSelectedConversationId(Number(id));
 
-      setSelectedConversationId(Number(id));
+        addToast({
+          title: "Support Chat Started",
+          message: "Any admin can now claim your chat",
+          tone: "success",
+        });
+
+        setShowNewChatForm(false);
+        return;
+      }
+
+      // ================= REPORT CHAT =================
+      if (chatType === "Report") {
+        const report = reports.find((r) => r.id === selectedReportId);
+
+        if (!report) {
+          addToast({
+            title: "Select Report",
+            message: "Please select a report first",
+            tone: "error",
+          });
+          return;
+        }
+
+        if (!report.assignedAdmin) {
+          addToast({
+            title: "Not Available",
+            message: "This report has no assigned admin yet",
+            tone: "warning",
+          });
+          return;
+        }
+
+        const existing = await chatConversationService.getByReport(report.id);
+
+        const existingId = existing.data?.id;
+        if (existingId) {
+          setSelectedConversationId(existingId);
+          return;
+        }
+
+        const created = await chatConversationService.createConversation({
+          chatType: "Report",
+          reportId: report.id,
+          isAnonymous: false,
+        });
+
+        const newId = created.data?.id || created.data?.Id;
+        setSelectedConversationId(Number(newId));
+      }
+
       setShowNewChatForm(false);
-
-      setNewChat({
-        chatType: "Support",
-        reportId: "",
-        isAnonymous: false,
-      });
-
-      addToast({
-        title: "Chat created",
-        message: "Support conversation started",
-        tone: "success",
-      });
-    } catch (error: any) {
+    } catch (err: any) {
       addToast({
         title: "Error",
-        message: error.response?.data?.message || "Failed to create chat",
+        message: err.response?.data?.message || "Failed to create chat",
         tone: "error",
       });
     } finally {
@@ -96,19 +149,18 @@ export function StudentChatPage() {
     }
   };
 
+  /* ---------------- UI ---------------- */
+
   return (
     <div className="space-y-6">
       {/* HEADER */}
       <Panel>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <MessageSquare size={32} />
-            <div>
-              <h1 className="text-2xl font-bold">Messaging</h1>
-              <p className="text-sm text-slate-600">
-                Chat with assigned administrators
-              </p>
-            </div>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Messaging</h1>
+            <p className="text-sm text-slate-600">
+              Support & Report conversations
+            </p>
           </div>
 
           <Button onClick={() => setShowNewChatForm((v) => !v)}>
@@ -118,63 +170,49 @@ export function StudentChatPage() {
         </div>
       </Panel>
 
-      {/* NEW CHAT FORM */}
+      {/* NEW CHAT */}
       {showNewChatForm && (
         <Panel>
-          <h2 className="text-lg font-bold mb-4">Start New Chat</h2>
+          <h2 className="font-bold mb-4">Start Chat</h2>
 
-          <form
-            onSubmit={handleCreateConversation}
-            className="grid gap-4 md:grid-cols-[1fr_200px_auto] items-end"
-          >
+          <form onSubmit={handleCreate} className="space-y-4">
             {/* CHAT TYPE */}
             <Field label="Chat Type">
               <select
                 className={inputClass}
-                value={newChat.chatType}
+                value={chatType}
                 onChange={(e) =>
-                  setNewChat((c) => ({ ...c, chatType: e.target.value }))
+                  setChatType(e.target.value as "Support" | "Report")
                 }
               >
                 <option value="Support">Support</option>
-                <option value="General">General</option>
                 <option value="Report">Report</option>
-                <option value="Emergency">Emergency</option>
               </select>
             </Field>
 
-            {/* REPORT ID */}
-            <Field label="Report ID">
-              <input
-                className={inputClass}
-                value={newChat.reportId}
-                onChange={(e) =>
-                  setNewChat((c) => ({ ...c, reportId: e.target.value }))
-                }
-                placeholder="Optional"
-              />
-            </Field>
+            {/* REPORT SELECT ONLY IF REPORT CHAT */}
+            {chatType === "Report" && (
+              <Field label="Select Report">
+                <select
+                  className={inputClass}
+                  value={selectedReportId ?? ""}
+                  onChange={(e) => setSelectedReportId(Number(e.target.value))}
+                >
+                  <option value="">-- Select Report --</option>
 
-            {/* ANONYMOUS */}
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={newChat.isAnonymous}
-                onChange={(e) =>
-                  setNewChat((c) => ({
-                    ...c,
-                    isAnonymous: e.target.checked,
-                  }))
-                }
-              />
-              Anonymous
-            </label>
+                  {reports.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.title}{" "}
+                      {r.assignedAdmin ? "(Assigned)" : "(No Admin Yet)"}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
 
-            <div className="md:col-span-3">
-              <Button type="submit" disabled={creating}>
-                {creating ? "Creating..." : "Start Chat"}
-              </Button>
-            </div>
+            <Button type="submit" disabled={creating}>
+              {creating ? "Creating..." : "Start Chat"}
+            </Button>
           </form>
         </Panel>
       )}
@@ -189,7 +227,7 @@ export function StudentChatPage() {
           />
         </Panel>
 
-        {/* CHAT WINDOW */}
+        {/* CHAT */}
         <div className="lg:col-span-2">
           {selectedConversationId ? (
             <div className="space-y-3">

@@ -7,18 +7,27 @@ interface ChatConversationListProps {
   onSelectConversation: (id: number) => void;
   selectedId?: number;
   adminMode?: boolean;
+
+  // ✅ NEW: allow external control
+  conversations?: Conversation[];
 }
 
 export function ChatConversationList({
   onSelectConversation,
   selectedId,
   adminMode = false,
+  conversations: externalConversations,
 }: ChatConversationListProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useApp();
 
+  const isControlled = !!externalConversations;
+  const data = isControlled ? externalConversations! : conversations;
+
   useEffect(() => {
+    if (isControlled) return;
+
     const load = async () => {
       setLoading(true);
       try {
@@ -34,7 +43,7 @@ export function ChatConversationList({
     };
 
     load();
-  }, [adminMode]);
+  }, [adminMode, isControlled]);
 
   const isAdmin = currentUser?.role !== "Student";
 
@@ -54,17 +63,17 @@ export function ChatConversationList({
     return new Date(dateString).toLocaleDateString();
   };
 
-  if (loading) {
+  if (!isControlled && loading) {
     return <p className="text-sm p-3 text-slate-500">Loading conversations…</p>;
   }
 
-  if (conversations.length === 0) {
+  if (data.length === 0) {
     return <p className="text-sm p-3 text-slate-400">No conversations yet</p>;
   }
 
   return (
     <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
-      {conversations.map((conv) => (
+      {data.map((conv) => (
         <button
           key={conv.id}
           onClick={() => onSelectConversation(conv.id)}
@@ -74,19 +83,16 @@ export function ChatConversationList({
               : "border-slate-200 hover:bg-slate-50"
           }`}
         >
-          {/* TITLE */}
           <div className="font-semibold text-sm truncate">
             {formatTitle(conv)}
           </div>
 
-          {/* LAST MESSAGE */}
           {conv.lastMessage && (
             <div className="text-xs text-slate-500 truncate">
               {conv.lastMessage}
             </div>
           )}
 
-          {/* FOOTER */}
           <div className="flex justify-between text-xs text-slate-400 mt-1">
             <span>{formatDate(conv.lastMessageTime || conv.createdAt)}</span>
 
