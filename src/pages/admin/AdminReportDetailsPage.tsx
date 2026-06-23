@@ -28,7 +28,11 @@ export function AdminReportDetailsPage() {
         setReport(found ?? null);
         if (found) setSelectedStatus(found.status);
       } catch {
-        addToast({ title: "Error", message: "Failed to load report", tone: "error" });
+        addToast({
+          title: "Error",
+          message: "Failed to load report",
+          tone: "error",
+        });
       } finally {
         setLoading(false);
       }
@@ -41,7 +45,11 @@ export function AdminReportDetailsPage() {
     setClaiming(true);
     try {
       await reportService.claimReport(report.id);
-      addToast({ title: "Claimed", message: "Report assigned to you", tone: "success" });
+      addToast({
+        title: "Claimed",
+        message: "Report assigned to you",
+        tone: "success",
+      });
       // Reload
       const res = await reportService.getAllReports();
       const found = res.data.find((r) => String(r.id) === id);
@@ -62,7 +70,11 @@ export function AdminReportDetailsPage() {
     setUpdatingStatus(true);
     try {
       await reportService.updateStatus(report.id, selectedStatus);
-      addToast({ title: "Updated", message: "Status updated successfully", tone: "success" });
+      addToast({
+        title: "Updated",
+        message: "Status updated successfully",
+        tone: "success",
+      });
       setReport((prev) => (prev ? { ...prev, status: selectedStatus } : null));
     } catch (err: any) {
       addToast({
@@ -88,7 +100,11 @@ export function AdminReportDetailsPage() {
       <EmptyState
         title="Report not found"
         message="This report does not exist or you don't have access."
-        action={<Link to="/admin/reports"><Button>Back to Reports</Button></Link>}
+        action={
+          <Link to="/admin/reports">
+            <Button>Back to Reports</Button>
+          </Link>
+        }
       />
     );
   }
@@ -109,9 +125,12 @@ export function AdminReportDetailsPage() {
       <Panel>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-950">{report.title}</h1>
+            <h1 className="text-2xl font-bold text-slate-950">
+              {report.title}
+            </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Report #{report.id} · Submitted {new Date(report.createdAt).toLocaleString()}
+              Report #{report.id} · Submitted{" "}
+              {new Date(report.createdAt).toLocaleString()}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -142,13 +161,20 @@ export function AdminReportDetailsPage() {
         <div className="lg:col-span-2 space-y-5">
           <Panel>
             <h2 className="font-bold text-slate-950 mb-3">Description</h2>
-            <p className="text-sm text-slate-700 whitespace-pre-wrap">{report.description}</p>
+            <p className="text-sm text-slate-700 whitespace-pre-wrap">
+              {report.description}
+            </p>
           </Panel>
 
           <Panel>
-            <h2 className="font-bold text-slate-950 mb-3">Complainant Information</h2>
+            <h2 className="font-bold text-slate-950 mb-3">
+              Complainant Information
+            </h2>
             <div className="grid sm:grid-cols-2 gap-3 text-sm">
-              <Detail label="Student ID" value={report.complainantStudentId} />
+              <Detail
+                label="Name"
+                value={`${report.student?.firstName} ${report.student?.lastName}`}
+              />
               <Detail label="Gender" value={report.complainantGender} />
               <Detail label="Department" value={report.department} />
               <Detail label="Email" value={report.email} />
@@ -157,29 +183,48 @@ export function AdminReportDetailsPage() {
           </Panel>
 
           <Panel>
-            <h2 className="font-bold text-slate-950 mb-3">Respondent Information</h2>
+            <h2 className="font-bold text-slate-950 mb-3">
+              Respondent Information
+            </h2>
             <div className="grid sm:grid-cols-2 gap-3 text-sm">
               <Detail label="Name" value={report.respondentName} />
               <Detail label="Position" value={report.respondentPosition} />
               <Detail label="Department" value={report.respondentDepartment} />
-              <Detail label="Relationship" value={report.relationshipToComplainant} />
+              <Detail
+                label="Relationship"
+                value={report.relationshipToComplainant}
+              />
             </div>
           </Panel>
 
           <Panel>
             <h2 className="font-bold text-slate-950 mb-3">Incident Details</h2>
             <div className="grid sm:grid-cols-2 gap-3 text-sm">
-              <Detail label="Date" value={report.incidentDate ? new Date(report.incidentDate).toLocaleDateString() : "—"} />
+              <Detail
+                label="Date"
+                value={
+                  report.incidentDate
+                    ? new Date(report.incidentDate).toLocaleDateString()
+                    : "—"
+                }
+              />
               <Detail label="Time" value={report.incidentTime} />
               <Detail label="Location" value={report.incidentLocation} />
               <Detail
                 label="Nature of Complaint"
-                value={Array.isArray(report.complaintNature) ? report.complaintNature.join(", ") : report.complaintNature}
+                value={
+                  Array.isArray(report.complaintNature)
+                    ? report.complaintNature.join(", ")
+                    : report.complaintNature
+                }
               />
             </div>
             <div className="mt-3 text-sm">
               <Detail label="Desired Outcome" value={report.desiredOutcome} />
-              <Detail label="Prior Report" value={report.priorReportWhere || "None"} />
+              <Detail
+                label="Prior Report"
+                value={report.priorReportWhere || "None"}
+              />
             </div>
           </Panel>
 
@@ -212,7 +257,8 @@ export function AdminReportDetailsPage() {
               <div className="text-sm">
                 <p className="text-slate-600">Assigned to:</p>
                 <p className="font-semibold text-slate-900 mt-1">
-                  {report.assignedAdmin!.firstName} {report.assignedAdmin!.lastName}
+                  {report.assignedAdmin!.firstName}{" "}
+                  {report.assignedAdmin!.lastName}
                 </p>
                 {isAssignedToMe && (
                   <p className="text-xs text-emerald-600 mt-1">That's you!</p>
@@ -220,7 +266,9 @@ export function AdminReportDetailsPage() {
               </div>
             ) : (
               <div>
-                <p className="text-sm text-amber-600 mb-3">This report is unassigned.</p>
+                <p className="text-sm text-amber-600 mb-3">
+                  This report is unassigned.
+                </p>
                 <Button
                   onClick={handleClaim}
                   disabled={claiming}
@@ -241,7 +289,9 @@ export function AdminReportDetailsPage() {
               className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institution-600 mb-3"
             >
               {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>
+                  {s}
+                </option>
               ))}
             </select>
             <Button
@@ -258,11 +308,15 @@ export function AdminReportDetailsPage() {
             <h2 className="font-bold text-slate-950 mb-2">Student</h2>
             {report.student ? (
               <div className="text-sm space-y-1">
-                <p className="font-semibold">{report.student.firstName} {report.student.lastName}</p>
+                <p className="font-semibold">
+                  {report.student.firstName} {report.student.lastName}
+                </p>
                 <p className="text-slate-600">{report.student.email}</p>
               </div>
             ) : (
-              <p className="text-sm text-slate-500">Anonymous or not available</p>
+              <p className="text-sm text-slate-500">
+                Anonymous or not available
+              </p>
             )}
           </Panel>
         </div>
@@ -271,7 +325,13 @@ export function AdminReportDetailsPage() {
   );
 }
 
-function Detail({ label, value }: { label: string; value: string | null | undefined }) {
+function Detail({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null | undefined;
+}) {
   return (
     <div>
       <p className="text-xs text-slate-500 uppercase tracking-wide">{label}</p>
