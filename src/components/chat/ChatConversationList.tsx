@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { chatConversationService } from "../../api/chatConversationService";
 import type { Conversation } from "../../types";
+import { useApp } from "../../context/AppContext";
 
 interface ChatConversationListProps {
   onSelectConversation: (id: number) => void;
@@ -15,6 +16,7 @@ export function ChatConversationList({
 }: ChatConversationListProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const { currentUser } = useApp();
 
   useEffect(() => {
     const load = async () => {
@@ -23,36 +25,41 @@ export function ChatConversationList({
         const res = adminMode
           ? await chatConversationService.getAllAdmin()
           : await chatConversationService.getMyConversations();
+
         const data = res.data;
-        setConversations(Array.isArray(data) ? data : data.items ?? []);
-      } catch (err) {
-        console.error("Failed to load conversations:", err);
+        setConversations(Array.isArray(data) ? data : (data.items ?? []));
       } finally {
         setLoading(false);
       }
     };
+
     load();
   }, [adminMode]);
 
+  const isAdmin = currentUser?.role !== "Student";
+
+  const formatTitle = (c: Conversation) => {
+    const report = c.reportId
+      ? `REP-${String(c.reportId).padStart(5, "0")}`
+      : c.chatType;
+
+    const name = isAdmin
+      ? c.studentName || "Unknown Student"
+      : c.assignedAdminName || "Unassigned Admin";
+
+    return `${name} (${report})`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
   if (loading) {
-    return (
-      <div className="py-6 text-center">
-        <p className="text-slate-500 text-sm">Loading conversations…</p>
-      </div>
-    );
+    return <p className="text-sm p-3 text-slate-500">Loading conversations…</p>;
   }
 
   if (conversations.length === 0) {
-    return (
-      <div className="py-8 text-center">
-        <p className="text-slate-400 text-sm">No conversations yet</p>
-        {!adminMode && (
-          <p className="text-slate-400 text-xs mt-1">
-            Click "New Chat" to start one
-          </p>
-        )}
-      </div>
-    );
+    return <p className="text-sm p-3 text-slate-400">No conversations yet</p>;
   }
 
   return (
@@ -61,32 +68,34 @@ export function ChatConversationList({
         <button
           key={conv.id}
           onClick={() => onSelectConversation(conv.id)}
-          className={`w-full text-left p-3 rounded-md border transition ${
+          className={`w-full text-left p-3 border rounded transition ${
             selectedId === conv.id
               ? "border-institution-700 bg-institution-50"
               : "border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm text-slate-900">
-                {conv.chatType} {conv.isAnonymous && "(Anonymous)"}
-              </div>
-              {conv.lastMessage && (
-                <p className="text-xs text-slate-500 truncate mt-0.5">
-                  {conv.lastMessage}
-                </p>
-              )}
-              <div className="text-xs text-slate-400 mt-1">
-                {new Date(conv.createdAt).toLocaleDateString()}
-              </div>
+          {/* TITLE */}
+          <div className="font-semibold text-sm truncate">
+            {formatTitle(conv)}
+          </div>
+
+          {/* LAST MESSAGE */}
+          {conv.lastMessage && (
+            <div className="text-xs text-slate-500 truncate">
+              {conv.lastMessage}
             </div>
+          )}
+
+          {/* FOOTER */}
+          <div className="flex justify-between text-xs text-slate-400 mt-1">
+            <span>{formatDate(conv.lastMessageTime || conv.createdAt)}</span>
+
             <span
-              className={`px-2 py-0.5 text-xs font-semibold rounded whitespace-nowrap flex-shrink-0 ${
+              className={
                 conv.status === "Open"
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-slate-200 text-slate-700"
-              }`}
+                  ? "text-emerald-600 font-semibold"
+                  : "text-slate-500"
+              }
             >
               {conv.status}
             </span>

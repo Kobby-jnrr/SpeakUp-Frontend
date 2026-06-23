@@ -71,16 +71,16 @@ export interface Conversation {
   status: string;
   isAnonymous: boolean;
   createdAt: string;
+
   lastMessage?: string | null;
   lastMessageTime?: string | null;
 
-  student?: {
-    id: number;
-    firstName: string;
-    lastName: string;
-  } | null;
+  reportId?: number | null;
 
-  assignedAdmin?: {
+  studentName?: string | null;
+  assignedAdminName?: string | null; // ✅ USE THIS
+
+  student?: {
     id: number;
     firstName: string;
     lastName: string;

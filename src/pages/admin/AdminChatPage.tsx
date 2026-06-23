@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { MessageSquare, UserPlus, Check } from "lucide-react";
+import { MessageSquare, Check } from "lucide-react";
 
 import { ChatWindow } from "../../components/chat/ChatWindow";
+import { ChatConversationList } from "../../components/chat/ChatConversationList";
 import { Button } from "../../components/ui/Button";
 import { Panel } from "../../components/ui/Cards";
 
@@ -36,12 +37,6 @@ export function AdminChatPage() {
 
       const data = res.data;
       setConversations(Array.isArray(data) ? data : (data.items ?? []));
-    } catch {
-      addToast({
-        title: "Error",
-        message: "Failed to load conversations",
-        tone: "error",
-      });
     } finally {
       setLoading(false);
     }
@@ -51,85 +46,32 @@ export function AdminChatPage() {
     loadConversations();
   }, [view]);
 
-  // ✅ DISPLAY NAME LOGIC (IMPORTANT)
-  const getChatName = (c: Conversation) => {
-    if (c.isAnonymous) return "Anonymous User";
+  const getChatName = (c?: Conversation) => {
+    if (!c) return "";
 
-    const studentName = c.student
-      ? `${c.student.firstName} ${c.student.lastName}`
-      : null;
+    const report = c.reportId
+      ? `REP-${String(c.reportId).padStart(5, "0")}`
+      : c.chatType;
 
-    const adminName = c.assignedAdmin
-      ? `${c.assignedAdmin.firstName} ${c.assignedAdmin.lastName}`
-      : null;
+    const isAdmin = currentUser?.role !== "Student";
 
-    // Admin view: show student
-    return studentName || adminName || `Chat #${c.id}`;
+    const name = isAdmin
+      ? c.studentName || "Unknown Student"
+      : c.assignedAdminName || "Unassigned Admin";
+
+    return `${name} (${report})`;
   };
 
   const currentConversation = conversations.find(
     (c) => c.id === selectedConversationId,
   );
 
-  const handleClaim = async (convId: number) => {
-    try {
-      await chatConversationService.assignAdmin({
-        conversationId: convId,
-        adminId: Number(currentUser?.id),
-      });
-
-      addToast({
-        title: "Assigned",
-        message: "Conversation assigned to you",
-        tone: "success",
-      });
-
-      await loadConversations();
-      setSelectedConversationId(convId);
-    } catch (err: any) {
-      addToast({
-        title: "Error",
-        message: err.response?.data || "Could not assign conversation",
-        tone: "error",
-      });
-    }
-  };
-
-  const handleClose = async () => {
-    if (!selectedConversationId) return;
-
-    try {
-      await chatConversationService.closeConversation(selectedConversationId);
-
-      addToast({
-        title: "Closed",
-        message: "Conversation closed",
-        tone: "success",
-      });
-
-      setSelectedConversationId(null);
-      loadConversations();
-    } catch (err: any) {
-      addToast({
-        title: "Error",
-        message: err.response?.data || "Could not close chat",
-        tone: "error",
-      });
-    }
-  };
-
-  const tabs: { key: ViewTab; label: string }[] = [
-    { key: "all", label: "All Chats" },
-    { key: "unassigned", label: "Unassigned" },
-    { key: "assigned", label: "Assigned to Me" },
-  ];
-
   return (
     <div className="space-y-6">
       {/* HEADER */}
-      <Panel className="border-institution-100 bg-institution-50">
+      <Panel>
         <div className="flex items-center gap-3">
-          <MessageSquare className="text-institution-600" size={32} />
+          <MessageSquare size={32} />
           <div>
             <h1 className="text-2xl font-bold">Chat Management</h1>
             <p className="text-sm text-slate-600">
@@ -139,73 +81,29 @@ export function AdminChatPage() {
         </div>
       </Panel>
 
-      {/* TABS */}
-      <div className="flex gap-2">
-        {tabs.map((t) => (
-          <Button
-            key={t.key}
-            onClick={() => {
-              setView(t.key);
-              setSelectedConversationId(null);
-            }}
-            className={
-              view === t.key
-                ? "bg-institution-600 text-white"
-                : "bg-slate-200 text-slate-700"
-            }
-          >
-            {t.label}
-          </Button>
-        ))}
-      </div>
-
       {/* MAIN */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* LIST */}
         <Panel className="lg:col-span-1">
-          <h2 className="font-semibold mb-4">
-            {loading ? "Loading..." : `${conversations.length} Conversations`}
-          </h2>
-
-          {conversations.map((conv) => (
-            <button
-              key={conv.id}
-              onClick={() => setSelectedConversationId(conv.id)}
-              className={`w-full text-left p-3 border rounded mb-2 ${
-                selectedConversationId === conv.id
-                  ? "border-institution-700 bg-institution-50"
-                  : "border-slate-200 hover:bg-slate-50"
-              }`}
-            >
-              {/* 👇 CHAT NAME HERE */}
-              <div className="font-semibold text-sm">{getChatName(conv)}</div>
-
-              <div className="text-xs text-slate-500">{conv.chatType}</div>
-
-              {conv.lastMessage && (
-                <p className="text-xs text-slate-400 truncate">
-                  {conv.lastMessage}
-                </p>
-              )}
-            </button>
-          ))}
+          <ChatConversationList
+            adminMode
+            selectedId={selectedConversationId || undefined}
+            onSelectConversation={setSelectedConversationId}
+          />
         </Panel>
 
         {/* CHAT WINDOW */}
         <div className="lg:col-span-2">
           {selectedConversationId ? (
             <div className="space-y-3">
-              {/* 👇 TOP HEADER NAME */}
+              {/* HEADER (FIXED) */}
               <div className="flex justify-between items-center">
                 <h2 className="font-semibold">
-                  {getChatName(currentConversation!)}
+                  {getChatName(currentConversation)}
                 </h2>
 
                 {currentConversation?.status === "Open" && (
-                  <Button
-                    onClick={handleClose}
-                    className="bg-slate-600 text-white text-sm"
-                  >
+                  <Button className="bg-slate-600 text-white text-sm">
                     <Check size={14} />
                     Close
                   </Button>

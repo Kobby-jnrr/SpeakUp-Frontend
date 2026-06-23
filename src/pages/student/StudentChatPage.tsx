@@ -1,18 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MessageSquare, Plus } from "lucide-react";
+
 import { ChatWindow } from "../../components/chat/ChatWindow";
 import { ChatConversationList } from "../../components/chat/ChatConversationList";
 import { Button } from "../../components/ui/Button";
 import { Panel } from "../../components/ui/Cards";
 import { Field, inputClass } from "../../components/ui/Form";
+
 import { useApp } from "../../context/AppContext";
 import { chatConversationService } from "../../api/chatConversationService";
+import type { Conversation } from "../../types";
 
 export function StudentChatPage() {
   const { addToast } = useApp();
   const navigate = useNavigate();
-  const { conversationId } = useParams(); // 👈 supports /student/chat/:id
+  const { conversationId } = useParams();
 
   const [selectedConversationId, setSelectedConversationId] = useState<
     number | null
@@ -20,27 +23,48 @@ export function StudentChatPage() {
 
   const [showNewChatForm, setShowNewChatForm] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+
+  const [conversations, setConversations] = useState<Conversation[]>([]);
 
   const [newChat, setNewChat] = useState({
-    chatType: "General",
+    chatType: "Support", // ✅ default SUPPORT FIX
     reportId: "",
     isAnonymous: false,
   });
 
   useEffect(() => {
-    if (selectedConversationId) {
-      navigate(`/student/chat/${selectedConversationId}`, { replace: true });
-    }
-  }, [selectedConversationId, navigate]);
+    const load = async () => {
+      const res = await chatConversationService.getMyConversations();
+      const data = res.data;
+      setConversations(Array.isArray(data) ? data : (data.items ?? []));
+    };
 
-  const handleCreateConversation = async (event: React.FormEvent) => {
-    event.preventDefault();
+    load();
+  }, []);
+
+  const currentConversation = conversations.find(
+    (c) => c.id === selectedConversationId,
+  );
+
+  const getChatTitle = (c?: Conversation) => {
+    if (!c) return "";
+
+    const report = c.reportId
+      ? `REP-${String(c.reportId).padStart(5, "0")}`
+      : c.chatType;
+
+    const admin = c.assignedAdminName || "Unassigned Admin";
+
+    return `${admin} (${report})`;
+  };
+
+  const handleCreateConversation = async (e: React.FormEvent) => {
+    e.preventDefault();
     setCreating(true);
 
     try {
       const res = await chatConversationService.createConversation({
-        chatType: newChat.chatType,
+        chatType: newChat.chatType, // ✅ includes SUPPORT
         isAnonymous: newChat.isAnonymous,
         reportId: newChat.reportId ? Number(newChat.reportId) : null,
       });
@@ -51,23 +75,20 @@ export function StudentChatPage() {
       setShowNewChatForm(false);
 
       setNewChat({
-        chatType: "General",
+        chatType: "Support",
         reportId: "",
         isAnonymous: false,
       });
 
-      setRefreshKey((k) => k + 1);
-
       addToast({
-        title: "Chat started",
-        message: "Conversation created successfully",
+        title: "Chat created",
+        message: "Support conversation started",
         tone: "success",
       });
     } catch (error: any) {
       addToast({
         title: "Error",
-        message:
-          error.response?.data?.message || "Could not create conversation",
+        message: error.response?.data?.message || "Failed to create chat",
         tone: "error",
       });
     } finally {
@@ -78,10 +99,10 @@ export function StudentChatPage() {
   return (
     <div className="space-y-6">
       {/* HEADER */}
-      <Panel className="border-support-100 bg-support-50">
+      <Panel>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <MessageSquare className="text-support-600" size={32} />
+            <MessageSquare size={32} />
             <div>
               <h1 className="text-2xl font-bold">Messaging</h1>
               <p className="text-sm text-slate-600">
@@ -103,10 +124,11 @@ export function StudentChatPage() {
           <h2 className="text-lg font-bold mb-4">Start New Chat</h2>
 
           <form
-            className="grid gap-4 md:grid-cols-[1fr_200px_auto] items-end"
             onSubmit={handleCreateConversation}
+            className="grid gap-4 md:grid-cols-[1fr_200px_auto] items-end"
           >
-            <Field label="Chat type">
+            {/* CHAT TYPE */}
+            <Field label="Chat Type">
               <select
                 className={inputClass}
                 value={newChat.chatType}
@@ -114,12 +136,14 @@ export function StudentChatPage() {
                   setNewChat((c) => ({ ...c, chatType: e.target.value }))
                 }
               >
+                <option value="Support">Support</option>
                 <option value="General">General</option>
                 <option value="Report">Report</option>
                 <option value="Emergency">Emergency</option>
               </select>
             </Field>
 
+            {/* REPORT ID */}
             <Field label="Report ID">
               <input
                 className={inputClass}
@@ -131,6 +155,7 @@ export function StudentChatPage() {
               />
             </Field>
 
+            {/* ANONYMOUS */}
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -154,27 +179,36 @@ export function StudentChatPage() {
         </Panel>
       )}
 
-      {/* CHAT LAYOUT */}
+      {/* MAIN */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* LIST */}
         <Panel className="lg:col-span-1">
-          <h2 className="font-semibold mb-4">My Conversations</h2>
-
           <ChatConversationList
-            key={refreshKey}
-            onSelectConversation={(id) => setSelectedConversationId(id)}
             selectedId={selectedConversationId || undefined}
+            onSelectConversation={setSelectedConversationId}
           />
         </Panel>
 
-        {/* WINDOW */}
+        {/* CHAT WINDOW */}
         <div className="lg:col-span-2">
           {selectedConversationId ? (
-            <ChatWindow conversationId={selectedConversationId} />
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <h2 className="font-semibold">
+                  {getChatTitle(currentConversation)}
+                </h2>
+
+                <span className="text-sm text-slate-500">
+                  {currentConversation?.status}
+                </span>
+              </div>
+
+              <ChatWindow conversationId={selectedConversationId} />
+            </div>
           ) : (
-            <Panel className="py-12 text-center text-slate-500">
+            <Panel className="text-center py-12 text-slate-500">
               <MessageSquare className="mx-auto mb-3" />
-              Select a conversation to start chatting
+              Select a conversation
             </Panel>
           )}
         </div>

@@ -139,7 +139,7 @@ export function StudentReportsPage() {
                   >
                     <td className="px-4 py-3">
                       <span className="font-medium text-slate-900">
-                        Formal Complaint
+                        REP-{String(r.id).padStart(5, "0")}
                       </span>
 
                       {r.confidential && (
