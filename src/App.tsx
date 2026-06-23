@@ -300,13 +300,14 @@ export default function App() {
         <Route
           path="/admin/users"
           element={
-            <JuniorAdminShell>
-              <Users />
-            </JuniorAdminShell>
+            <ProtectedRoute role="SuperAdmin">
+              <AdminLayout>
+                <Users />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
 
-        {/* ================= SUPER ADMIN ================= */}
         <Route
           path="/admin/create-junior-admin"
           element={

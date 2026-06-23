@@ -107,7 +107,7 @@ export function ReportForm() {
     );
 
     const payload = {
-      title: `Sexual Harassment Complaint - ${form.fullName}`,
+      title: "",
       description: form.description,
       complainantGender: form.complainantGender,
       complainantStudentId: form.complainantStudentId,

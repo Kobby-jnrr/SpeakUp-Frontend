@@ -93,7 +93,6 @@ export function StudentHomePage() {
       {/* HERO SKELETON */}
       <div className="h-[300px] rounded-xl bg-slate-200" />
 
-      {/* QUICK ACTIONS SKELETON */}
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {Array(5)
           .fill(0)
@@ -130,9 +129,23 @@ export function StudentHomePage() {
         <div className="animate-fade-in space-y-6">
           {/* HERO SLIDER */}
           <div className="relative overflow-hidden rounded-xl">
-            <div className="relative h-[300px] bg-slate-900">
+            <div className="relative h-[420px] bg-slate-900">
+              {/* BACKGROUND IMAGE LOGIC */}
+              <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{
+                  backgroundImage: heroSlides.length
+                    ? `url(${heroSlides[slide].imageUrl})`
+                    : `url(/images/carousel.png)`,
+                }}
+              />
+
+              {/* DARK OVERLAY */}
+              <div className="absolute inset-0 bg-black/50" />
+
+              {/* CONTENT */}
               {heroSlides.length === 0 ? (
-                <div className="p-10 text-white h-full flex flex-col justify-center">
+                <div className="relative z-10 p-12 md:p-16 text-white h-full flex flex-col justify-center">
                   <h2 className="text-3xl font-bold">
                     SpeakUp — Your Voice Matters
                   </h2>
@@ -147,32 +160,32 @@ export function StudentHomePage() {
                   </div>
                 </div>
               ) : (
-                <>
-                  <div className="relative p-10 text-white h-full flex flex-col justify-center">
-                    <h2 className="text-2xl font-bold">
-                      {heroSlides[slide].title}
-                    </h2>
-                    <p className="mt-2 text-sm text-white/80 max-w-lg">
-                      {heroSlides[slide].content}
-                    </p>
-                  </div>
+                <div className="relative z-10 p-10 text-white h-full flex flex-col justify-center">
+                  <h2 className="text-2xl font-bold">
+                    {heroSlides[slide].title}
+                  </h2>
+                  <p className="mt-2 text-sm text-white/80 max-w-lg">
+                    {heroSlides[slide].content}
+                  </p>
+                </div>
+              )}
 
-                  {heroSlides.length > 1 && (
-                    <>
-                      <button
-                        onClick={prevSlide}
-                        className="absolute left-3 top-1/2"
-                      >
-                        <ArrowLeft />
-                      </button>
-                      <button
-                        onClick={nextSlide}
-                        className="absolute right-3 top-1/2"
-                      >
-                        <ArrowRight />
-                      </button>
-                    </>
-                  )}
+              {/* NAV BUTTONS */}
+              {heroSlides.length > 1 && (
+                <>
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-3 top-1/2 z-20"
+                  >
+                    <ArrowLeft />
+                  </button>
+
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-3 top-1/2 z-20"
+                  >
+                    <ArrowRight />
+                  </button>
                 </>
               )}
             </div>

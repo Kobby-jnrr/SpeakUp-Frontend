@@ -28,7 +28,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
   const links = [
     { to: "/admin/dashboard", label: "Dashboard", icon: Home },
-    { to: "/admin/users", label: "Users", icon: User },
     { to: "/admin/reports", label: "Reports", icon: FileText },
     { to: "/admin/chat", label: "Chat", icon: MessageSquare },
     { to: "/admin/homepage-content", label: "Homepage Content", icon: Zap },
@@ -43,6 +42,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             to: "/admin/create-junior-admin",
             label: "Create Admin",
             icon: UserPlus,
+          },
+          {
+            to: "/admin/users",
+            label: "Users",
+            icon: User,
           },
         ]
       : []),

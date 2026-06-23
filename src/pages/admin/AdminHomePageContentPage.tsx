@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Zap, Plus, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import { Plus, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { Button } from "../../components/ui/Button";
 import { Panel } from "../../components/ui/Cards";
@@ -52,6 +52,7 @@ export function AdminHomePageContentPage() {
 
   const loadContents = async () => {
     setLoading(true);
+
     try {
       const res = await homepageService.getAllContent();
       setContents(res.data);
@@ -93,7 +94,8 @@ export function AdminHomePageContentPage() {
 
       setForm(emptyForm);
       setShowForm(false);
-      loadContents();
+
+      await loadContents();
     } catch {
       addToast({
         title: "Error",
@@ -110,8 +112,16 @@ export function AdminHomePageContentPage() {
       await homepageService.toggleContent(id);
 
       setContents((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, isActive: !c.isActive } : c)),
+        prev.map((item) =>
+          item.id === id ? { ...item, isActive: !item.isActive } : item,
+        ),
       );
+
+      addToast({
+        title: "Success",
+        message: "Content status updated",
+        tone: "success",
+      });
     } catch {
       addToast({
         title: "Error",
@@ -127,7 +137,7 @@ export function AdminHomePageContentPage() {
     try {
       await homepageService.deleteContent(id);
 
-      setContents((prev) => prev.filter((c) => c.id !== id));
+      setContents((prev) => prev.filter((item) => item.id !== id));
 
       addToast({
         title: "Deleted",
@@ -145,22 +155,20 @@ export function AdminHomePageContentPage() {
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
       <Panel>
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Homepage Content</h1>
             <p className="text-sm text-slate-600">Manage what students see</p>
           </div>
 
-          <Button onClick={() => setShowForm(!showForm)}>
+          <Button onClick={() => setShowForm((prev) => !prev)}>
             <Plus size={16} />
             {showForm ? "Cancel" : "Add"}
           </Button>
         </div>
       </Panel>
 
-      {/* FORM */}
       {showForm && (
         <Panel>
           <form onSubmit={handleCreate} className="space-y-4">
@@ -170,8 +178,10 @@ export function AdminHomePageContentPage() {
                 value={form.type}
                 onChange={(e) => setForm({ ...form, type: e.target.value })}
               >
-                {CONTENT_TYPES.map((t) => (
-                  <option key={t}>{TYPE_LABELS[t]}</option>
+                {CONTENT_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {TYPE_LABELS[type]}
+                  </option>
                 ))}
               </select>
             </Field>
@@ -192,6 +202,37 @@ export function AdminHomePageContentPage() {
               />
             </Field>
 
+            <Field label="Image URL">
+              <input
+                className={inputClass}
+                placeholder="https://example.com/image.jpg"
+                value={form.imageUrl}
+                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+              />
+            </Field>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Start Date">
+                <input
+                  type="datetime-local"
+                  className={inputClass}
+                  value={form.startAt}
+                  onChange={(e) =>
+                    setForm({ ...form, startAt: e.target.value })
+                  }
+                />
+              </Field>
+
+              <Field label="End Date">
+                <input
+                  type="datetime-local"
+                  className={inputClass}
+                  value={form.endAt}
+                  onChange={(e) => setForm({ ...form, endAt: e.target.value })}
+                />
+              </Field>
+            </div>
+
             <Button type="submit" disabled={submitting}>
               {submitting ? "Creating..." : "Create"}
             </Button>
@@ -199,24 +240,30 @@ export function AdminHomePageContentPage() {
         </Panel>
       )}
 
-      {/* LIST */}
       <Panel>
-        <h2 className="font-semibold mb-4">
+        <h2 className="mb-4 font-semibold">
           {loading ? "Loading..." : `${contents.length} items`}
         </h2>
+
+        {!loading && contents.length === 0 && (
+          <p className="text-sm text-slate-500">No homepage content found.</p>
+        )}
 
         {contents.map((item) => (
           <div
             key={item.id}
-            className="p-4 border rounded-lg mb-3 flex justify-between"
+            className="mb-3 flex justify-between rounded-lg border p-4"
           >
-            {/* LEFT */}
             <div className="flex-1">
+              <p className="mb-1 text-xs font-semibold text-blue-600">
+                {TYPE_LABELS[item.type] ?? item.type}
+              </p>
+
               <h3 className="font-semibold">{item.title}</h3>
 
               <p className="text-sm text-slate-600">{item.content}</p>
 
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="mt-2 text-xs text-slate-500">
                 Created by: {item.createdBy}
               </p>
 
@@ -232,9 +279,8 @@ export function AdminHomePageContentPage() {
               </p>
             </div>
 
-            {/* ACTIONS */}
             <div className="flex items-center gap-3">
-              <button onClick={() => handleToggle(item.id)}>
+              <button type="button" onClick={() => handleToggle(item.id)}>
                 {item.isActive ? (
                   <ToggleRight className="text-green-600" />
                 ) : (
@@ -243,6 +289,7 @@ export function AdminHomePageContentPage() {
               </button>
 
               <button
+                type="button"
                 onClick={() => handleDelete(item.id)}
                 className="text-red-500"
               >
