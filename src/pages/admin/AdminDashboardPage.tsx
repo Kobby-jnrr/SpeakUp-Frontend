@@ -146,7 +146,9 @@ export function AdminDashboard() {
               <tbody>
                 {recentReports.map((r) => (
                   <tr key={r.id} className="border-b hover:bg-slate-50">
-                    <td className="py-2 pr-4 text-slate-500">#{r.id}</td>
+                    <td className="py-2 pr-4 text-slate-500">
+                      REP-{String(r.id).padStart(5, "0")}
+                    </td>
                     <td className="py-2 pr-4">
                       <Link
                         to={`/admin/reports/${r.id}`}

@@ -38,7 +38,6 @@ const mainLinks = [
 ];
 
 const moreLinks = [
-  { to: "/student/campaigns", label: "Campaigns", icon: Megaphone },
   { to: "/student/faqs", label: "FAQs", icon: CircleHelp },
   { to: "/student/privacy", label: "Privacy Policy", icon: Lock },
   { to: "/student/about", label: "About Us", icon: Info },
@@ -52,12 +51,10 @@ export function StudentLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   const unread = 0;
-  const initials = [
-    currentUser?.firstName?.[0] ?? "",
-    currentUser?.lastName?.[0] ?? "",
-  ]
-    .join("")
-    .toUpperCase() || "ST";
+  const initials =
+    [currentUser?.firstName?.[0] ?? "", currentUser?.lastName?.[0] ?? ""]
+      .join("")
+      .toUpperCase() || "ST";
 
   const renderLink = ({
     to,

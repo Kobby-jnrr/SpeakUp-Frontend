@@ -49,7 +49,7 @@ export function ChatConversationList({
 
   const formatTitle = (c: Conversation) => {
     const report = c.reportId
-      ? `REP-${String(c.reportId).padStart(5, "0")}`
+      ? `REP-${String(c.reportId).padStart(6, "0")}`
       : c.chatType;
 
     const name = isAdmin

@@ -1,10 +1,8 @@
 export { AdminDashboard } from "./AdminDashboardPage";
-export { AdminNotificationsPage } from "./AdminNotificationsPage";
 export { AdminReportDetailsPage } from "./AdminReportDetailsPage";
 export { AdminReportsPage } from "./AdminReportsPage";
 export { AdminResourcesPage } from "./AdminResourcesPage";
 export { AdminSettingsPage } from "./AdminSettingsPage";
-
 export { AdminChatPage } from "./AdminChatPage";
 export { AdminHomePageContentPage } from "./AdminHomePageContentPage";
 export { default as CreateJuniorAdminPage } from "./CreateJuniorAdminPage";

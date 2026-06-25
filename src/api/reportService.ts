@@ -40,6 +40,9 @@ export const reportService = {
   // ADMIN: CLAIM REPORT
   claimReport: (reportId: number) => api.post(`/Report/claim/${reportId}`),
 
+  // ADMIN: GET ASSIGNED TO ME
+  getAssignedToMe: () => api.get<BackendReport[]>("/Report/assigned-to-me"),
+
   // ADMIN: UPDATE STATUS
   updateStatus: (reportId: number, status: string) =>
     api.put(`/Report/status/${reportId}`, { status }),

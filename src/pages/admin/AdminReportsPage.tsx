@@ -6,47 +6,72 @@ import { reportService } from "../../api/reportService";
 import { useApp } from "../../context/AppContext";
 import type { BackendReport } from "../../types";
 
+type ViewMode = "all" | "mine";
+
 export function AdminReportsPage() {
   const { addToast } = useApp();
   const [reports, setReports] = useState<BackendReport[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [viewMode, setViewMode] = useState<ViewMode>("all");
+
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All statuses");
   const [confidential, setConfidential] = useState("All");
 
+  const loadReports = async (mode: ViewMode) => {
+    setLoading(true);
+    try {
+      const res =
+        mode === "mine"
+          ? await reportService.getAssignedToMe()
+          : await reportService.getAllReports();
+
+      setReports(res.data);
+    } catch {
+      addToast({
+        title: "Error",
+        message: "Failed to load reports",
+        tone: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await reportService.getAllReports();
-        setReports(res.data);
-      } catch {
-        addToast({
-          title: "Error",
-          message: "Failed to load reports",
-          tone: "error",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+    loadReports(viewMode);
+  }, [viewMode]);
 
   const filtered = useMemo(() => {
+    const searchTerm = query.trim().toLowerCase();
+
     return reports
-      .filter((r) =>
-        [
+      .filter((r) => {
+        if (!searchTerm) return true;
+
+        const reportCode = `rep-${String(r.id).padStart(6, "0")}`;
+
+        const searchableText = [
+          reportCode,
           r.id,
           r.title,
+          r.description,
+          r.status,
           r.department,
           r.complainantStudentId,
           r.incidentLocation,
+          r.respondentName,
+          r.email,
+          r.assignedAdmin?.firstName,
+          r.assignedAdmin?.lastName,
         ]
+          .filter(Boolean)
           .join(" ")
-          .toLowerCase()
-          .includes(query.toLowerCase()),
-      )
+          .toLowerCase();
+
+        return searchableText.includes(searchTerm);
+      })
       .filter((r) => status === "All statuses" || r.status === status)
       .filter((r) => {
         if (confidential === "Confidential") return r.confidential;
@@ -60,12 +85,43 @@ export function AdminReportsPage() {
       <Panel>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-950">All Reports</h1>
+            <h1 className="text-2xl font-bold text-slate-950">
+              {viewMode === "all" ? "All Reports" : "My Assigned Reports"}
+            </h1>
             <p className="mt-1 text-sm text-slate-600">
-              Manage, claim, and update all submitted reports.
+              {viewMode === "all"
+                ? "Manage, claim, and update all submitted reports."
+                : "Reports currently assigned to you."}
             </p>
           </div>
+
+          {/* 🔥 TOGGLE BUTTONS */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode("all")}
+              className={`px-3 py-1.5 rounded-md text-sm font-semibold transition ${
+                viewMode === "all"
+                  ? "bg-institution-600 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              All Reports
+            </button>
+
+            <button
+              onClick={() => setViewMode("mine")}
+              className={`px-3 py-1.5 rounded-md text-sm font-semibold transition ${
+                viewMode === "mine"
+                  ? "bg-institution-600 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              My Assigned
+            </button>
+          </div>
         </div>
+
+        {/* SEARCH + FILTERS */}
         <div className="mt-4 flex flex-wrap gap-2">
           <SearchInput
             value={query}
@@ -117,6 +173,7 @@ export function AdminReportsPage() {
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
+
               <tbody>
                 {filtered.map((r) => (
                   <tr
@@ -125,7 +182,7 @@ export function AdminReportsPage() {
                   >
                     <td className="px-4 py-3">
                       <span className="font-medium text-slate-900">
-                        REP-{String(r.id).padStart(5, "0")}
+                        REP-{String(r.id).padStart(6, "0")}
                       </span>
 
                       {r.confidential && (
@@ -134,6 +191,7 @@ export function AdminReportsPage() {
                         </span>
                       )}
                     </td>
+
                     <td className="px-4 py-3">
                       <span
                         className={`px-2 py-0.5 rounded text-xs font-semibold ${
@@ -149,14 +207,17 @@ export function AdminReportsPage() {
                         {r.status}
                       </span>
                     </td>
+
                     <td className="px-4 py-3 text-slate-600">
                       {r.department || "—"}
                     </td>
+
                     <td className="px-4 py-3 text-slate-600">
                       {r.incidentDate
                         ? new Date(r.incidentDate).toLocaleDateString()
                         : "—"}
                     </td>
+
                     <td className="px-4 py-3 text-slate-600">
                       {r.assignedAdmin ? (
                         `${r.assignedAdmin.firstName} ${r.assignedAdmin.lastName}`
@@ -164,9 +225,11 @@ export function AdminReportsPage() {
                         <span className="text-amber-600">Unassigned</span>
                       )}
                     </td>
+
                     <td className="px-4 py-3 text-slate-500 text-xs">
                       {new Date(r.createdAt).toLocaleDateString()}
                     </td>
+
                     <td className="px-4 py-3">
                       <Link
                         to={`/admin/reports/${r.id}`}

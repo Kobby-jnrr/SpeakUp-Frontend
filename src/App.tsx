@@ -8,7 +8,6 @@ import { ToastViewport } from "./components/ui/Toast";
 // ================= ADMIN PAGES =================
 import {
   AdminDashboard,
-  AdminNotificationsPage,
   AdminReportDetailsPage,
   AdminReportsPage,
   AdminResourcesPage,
@@ -248,15 +247,6 @@ export default function App() {
           element={
             <JuniorAdminShell>
               <AdminResourcesPage />
-            </JuniorAdminShell>
-          }
-        />
-
-        <Route
-          path="/admin/notifications"
-          element={
-            <JuniorAdminShell>
-              <AdminNotificationsPage />
             </JuniorAdminShell>
           }
         />

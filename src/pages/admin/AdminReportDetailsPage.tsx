@@ -129,7 +129,7 @@ export function AdminReportDetailsPage() {
               {report.title}
             </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Report #{report.id} · Submitted{" "}
+              REP-{String(report.id).padStart(6, "0")} · Submitted{" "}
               {new Date(report.createdAt).toLocaleString()}
             </p>
           </div>
@@ -305,7 +305,23 @@ export function AdminReportDetailsPage() {
           </Panel>
 
           <Panel>
-            <h2 className="font-bold text-slate-950 mb-2">Student</h2>
+            <h2 className="font-bold text-slate-950 mb-3">Status Tracking</h2>
+
+            <div className="space-y-3 text-sm border-l pl-4 border-slate-200">
+              {/* Updated At only */}
+              <div>
+                <p className="text-slate-500 text-xs">Last Updated</p>
+                <p className="text-slate-800">
+                  {report.updatedAt
+                    ? new Date(report.updatedAt).toLocaleString()
+                    : "—"}
+                </p>
+              </div>
+            </div>
+          </Panel>
+
+          <Panel>
+            <h2 className="font-bold text-slate-950 mb-2">Sent by</h2>
             {report.student ? (
               <div className="text-sm space-y-1">
                 <p className="font-semibold">

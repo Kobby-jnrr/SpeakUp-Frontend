@@ -118,7 +118,7 @@ export function AdminChatPage() {
     if (!c) return "";
 
     const report = c.reportId
-      ? `REP-${String(c.reportId).padStart(5, "0")}`
+      ? `REP-${String(c.reportId).padStart(6, "0")}`
       : c.chatType;
 
     const student = c.studentName || "Unknown Student";

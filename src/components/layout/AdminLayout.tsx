@@ -32,7 +32,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { to: "/admin/chat", label: "Chat", icon: MessageSquare },
     { to: "/admin/homepage-content", label: "Homepage Content", icon: Zap },
     { to: "/admin/resources", label: "Resources", icon: Wrench },
-    { to: "/admin/notifications", label: "Notifications", icon: Bell },
     { to: "/admin/settings", label: "Settings", icon: Settings },
 
     // ✅ SUPER ADMIN ONLY
