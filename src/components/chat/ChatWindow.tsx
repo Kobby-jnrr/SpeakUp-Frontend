@@ -7,9 +7,13 @@ import type { ChatMessage } from "../../types";
 
 interface ChatWindowProps {
   conversationId: number;
+  conversationStatus?: string;
 }
 
-export function ChatWindow({ conversationId }: ChatWindowProps) {
+export function ChatWindow({
+  conversationId,
+  conversationStatus,
+}: ChatWindowProps) {
   const { currentUser, addToast } = useApp();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -24,7 +28,11 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       setMessages(res.data);
     } catch {
       if (showLoader) {
-        addToast({ title: "Error", message: "Could not load messages", tone: "error" });
+        addToast({
+          title: "Error",
+          message: "Could not load messages",
+          tone: "error",
+        });
       }
     } finally {
       if (showLoader) setLoading(false);
@@ -42,6 +50,18 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    const markAsRead = async () => {
+      try {
+        await chatMessageService.markConversationAsRead(conversationId);
+      } catch (err) {
+        console.error("Failed to mark as read", err);
+      }
+    };
+
+    markAsRead();
+  }, [conversationId]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || sending) return;
@@ -76,7 +96,9 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   if (loading) {
     return (
       <Panel>
-        <p className="text-slate-500 text-sm text-center py-8">Loading messages…</p>
+        <p className="text-slate-500 text-sm text-center py-8">
+          Loading messages…
+        </p>
       </Panel>
     );
   }
@@ -133,24 +155,38 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       </div>
 
       {/* Input */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-          placeholder="Type a message…"
-          disabled={sending}
-          className="flex-1 px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-institution-600 disabled:opacity-50"
-        />
-        <button
-          onClick={handleSend}
-          disabled={sending || !newMessage.trim()}
-          className="p-2 bg-institution-600 text-white rounded-md hover:bg-institution-700 disabled:opacity-50 transition"
-        >
-          <Send size={18} />
-        </button>
-      </div>
+      {/* Input */}
+      {conversationStatus === "Closed" ? (
+        <div className="border rounded-md p-4 bg-slate-50 text-center">
+          <p className="text-sm text-slate-600">
+            This conversation has been closed.
+          </p>
+
+          <p className="text-xs text-slate-500 mt-1">
+            The assigned administrator closed this chat.
+          </p>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+            placeholder="Type a message…"
+            disabled={sending}
+            className="flex-1 px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-institution-600 disabled:opacity-50"
+          />
+
+          <button
+            onClick={handleSend}
+            disabled={sending || !newMessage.trim()}
+            className="p-2 bg-institution-600 text-white rounded-md hover:bg-institution-700 disabled:opacity-50 transition"
+          >
+            <Send size={18} />
+          </button>
+        </div>
+      )}
     </Panel>
   );
 }

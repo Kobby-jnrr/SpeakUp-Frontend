@@ -87,11 +87,19 @@ export function ChatConversationList({
             {formatTitle(conv)}
           </div>
 
-          {conv.lastMessage && (
-            <div className="text-xs text-slate-500 truncate">
-              {conv.lastMessage}
-            </div>
-          )}
+          <div className="flex justify-between items-center">
+            {conv.lastMessage && (
+              <div className="text-xs text-slate-500 truncate flex-1">
+                {conv.lastMessage}
+              </div>
+            )}
+
+            {(conv.unreadCount ?? 0) > 0 && (
+              <span className="ml-2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">
+                {conv.unreadCount}
+              </span>
+            )}
+          </div>
 
           <div className="flex justify-between text-xs text-slate-400 mt-1">
             <span>{formatDate(conv.lastMessageTime || conv.createdAt)}</span>

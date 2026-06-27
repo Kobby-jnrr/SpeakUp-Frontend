@@ -74,12 +74,13 @@ export interface Conversation {
 
   lastMessage?: string | null;
   lastMessageTime?: string | null;
+  unreadCount?: number;
 
   reportId?: number | null;
 
   studentName?: string | null;
   assignedAdminId?: number | null;
-  assignedAdminName?: string | null; // ✅ USE THIS
+  assignedAdminName?: string | null;
 
   student?: {
     id: number;

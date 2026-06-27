@@ -217,8 +217,10 @@ export function AdminChatPage() {
                   )}
                 </div>
               </div>
-
-              <ChatWindow conversationId={selectedConversationId} />
+              <ChatWindow
+                conversationId={selectedConversationId}
+                conversationStatus={currentConversation?.status}
+              />
             </div>
           ) : (
             <Panel className="text-center py-12 text-slate-500">

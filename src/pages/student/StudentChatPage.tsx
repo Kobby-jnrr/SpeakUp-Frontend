@@ -241,7 +241,10 @@ export function StudentChatPage() {
                 </span>
               </div>
 
-              <ChatWindow conversationId={selectedConversationId} />
+              <ChatWindow
+                conversationId={selectedConversationId}
+                conversationStatus={currentConversation?.status}
+              />
             </div>
           ) : (
             <Panel className="text-center py-12 text-slate-500">

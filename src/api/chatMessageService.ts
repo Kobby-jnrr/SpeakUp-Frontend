@@ -7,4 +7,7 @@ export const chatMessageService = {
     api.get(`/ChatMessage/${conversationId}`),
 
   markAsRead: (messageId: number) => api.put(`/ChatMessage/read/${messageId}`),
+
+  markConversationAsRead: (conversationId: number) =>
+    api.put(`/ChatMessage/read/conversation/${conversationId}`),
 };
