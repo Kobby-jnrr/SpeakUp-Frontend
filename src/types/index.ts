@@ -20,7 +20,8 @@ export interface BackendReport {
   id: number;
   title: string;
   description: string;
-  status: string; // "Pending" | "InProgress" | "Resolved" | "Closed"
+  type: "Full" | "Quick";
+  status: string;
   createdAt: string;
   updatedAt: string | null;
 
@@ -48,6 +49,7 @@ export interface BackendReport {
 
   priorReportWhere: string;
   desiredOutcome: string;
+  isAnonymous: boolean;
   confidential: boolean;
 
   student?: {

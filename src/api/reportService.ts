@@ -26,10 +26,19 @@ export interface CreateReportPayload {
   confidential: boolean;
 }
 
+export interface CreateQuickReportPayload {
+  description: string;
+  isAnonymous: boolean;
+}
+
 export const reportService = {
   // STUDENT: CREATE REPORT
   createReport: (data: CreateReportPayload) =>
     api.post<BackendReport>("/Report/create", data),
+
+  // STUDENT: CREATE QUICK REPORT
+  createQuickReport: (data: CreateQuickReportPayload) =>
+    api.post("/Report/quick", data),
 
   // STUDENT: GET MY REPORTS
   getMyReports: () => api.get<BackendReport[]>("/Report/my"),
