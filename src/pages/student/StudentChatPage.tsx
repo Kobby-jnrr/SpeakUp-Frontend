@@ -25,8 +25,9 @@ export function StudentChatPage() {
   const [showNewChatForm, setShowNewChatForm] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  const [chatType, setChatType] = useState<"Support" | "Report">("Support");
-
+  const [chatType, setChatType] = useState<"Support" | "Report" | "Counseling">(
+    "Support",
+  );
   const [reports, setReports] = useState<BackendReport[]>([]);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
 
@@ -76,10 +77,10 @@ export function StudentChatPage() {
     setCreating(true);
 
     try {
-      // ================= SUPPORT CHAT =================
-      if (chatType === "Support") {
+      // ================= SUPPORT / COUNSELING CHAT =================
+      if (chatType === "Support" || chatType === "Counseling") {
         const res = await chatConversationService.createConversation({
-          chatType: "Support",
+          chatType,
           reportId: null,
           isAnonymous: false,
         });
@@ -88,8 +89,11 @@ export function StudentChatPage() {
         setSelectedConversationId(Number(id));
 
         addToast({
-          title: "Support Chat Started",
-          message: "Any admin can now claim your chat",
+          title:
+            chatType === "Counseling"
+              ? "Counseling Chat Started"
+              : "Support Chat Started",
+          message: "An admin will respond shortly",
           tone: "success",
         });
 
@@ -182,11 +186,14 @@ export function StudentChatPage() {
                 className={inputClass}
                 value={chatType}
                 onChange={(e) =>
-                  setChatType(e.target.value as "Support" | "Report")
+                  setChatType(
+                    e.target.value as "Support" | "Report" | "Counseling",
+                  )
                 }
               >
                 <option value="Support">Support</option>
                 <option value="Report">Report</option>
+                <option value="Counseling">Counseling</option>
               </select>
             </Field>
 

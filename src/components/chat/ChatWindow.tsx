@@ -15,14 +15,22 @@ export function ChatWindow({
   conversationStatus,
 }: ChatWindowProps) {
   const { currentUser, addToast } = useApp();
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const isNearBottomRef = useRef(true);
+
+  /* ---------------- LOAD MESSAGES ---------------- */
   const loadMessages = async (showLoader = false) => {
     if (showLoader) setLoading(true);
+
     try {
       const res = await chatMessageService.getMessages(conversationId);
       setMessages(res.data);
@@ -39,18 +47,36 @@ export function ChatWindow({
     }
   };
 
-  // Initial load + 3-second polling
+  /* ---------------- INIT + POLLING ---------------- */
   useEffect(() => {
     loadMessages(true);
-    const interval = setInterval(() => loadMessages(false), 3000);
+
+    const interval = setInterval(() => {
+      loadMessages(false);
+    }, 3000);
+
     return () => clearInterval(interval);
   }, [conversationId]);
 
-  // Auto-scroll to bottom when messages change
+  /* ---------------- SCROLL TRACKING ---------------- */
+  const handleScroll = () => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const threshold = 80;
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+
+    isNearBottomRef.current = distance < threshold;
+  };
+
+  /* ---------------- AUTO SCROLL ---------------- */
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isNearBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
+  /* ---------------- MARK AS READ ---------------- */
   useEffect(() => {
     const markAsRead = async () => {
       try {
@@ -63,10 +89,12 @@ export function ChatWindow({
     markAsRead();
   }, [conversationId]);
 
+  /* ---------------- SEND MESSAGE ---------------- */
   const handleSend = async () => {
     if (!newMessage.trim() || sending) return;
 
     const text = newMessage.trim();
+
     setNewMessage("");
     setSending(true);
 
@@ -75,24 +103,33 @@ export function ChatWindow({
         conversationId,
         message: text,
       });
-      // Immediately reload to show the sent message
+
       await loadMessages(false);
+
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
     } catch (err: any) {
       addToast({
         title: "Failed to send",
         message:
           err.response?.data?.message ||
           err.response?.data ||
-          "Could not send your message",
+          "Could not send message",
         tone: "error",
       });
-      // Restore the typed text on failure
+
       setNewMessage(text);
+
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
     } finally {
       setSending(false);
     }
   };
 
+  /* ---------------- LOADING ---------------- */
   if (loading) {
     return (
       <Panel>
@@ -103,72 +140,80 @@ export function ChatWindow({
     );
   }
 
+  /* ---------------- UI ---------------- */
   return (
     <Panel className="flex flex-col h-[480px]">
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-3 bg-slate-50 p-4 rounded-md mb-4">
+      {/* MESSAGES */}
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto space-y-3 bg-slate-50 p-4 rounded-md mb-4"
+      >
         {messages.length === 0 ? (
           <p className="text-center text-slate-400 text-sm py-8">
             No messages yet — say hello!
           </p>
         ) : (
           messages.map((msg) => {
-            const isMe = msg.senderId === Number(currentUser?.id);
+            const isMe = msg.sender?.id === Number(currentUser?.id);
+
             return (
               <div
                 key={msg.id}
                 className={`flex ${isMe ? "justify-end" : "justify-start"}`}
               >
-                <div
-                  className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
-                    isMe
-                      ? "bg-institution-600 text-white rounded-br-none"
-                      : "bg-white border border-slate-200 text-slate-900 rounded-bl-none"
-                  }`}
-                >
+                <div className="flex flex-col max-w-xs md:max-w-md">
+                  {/* Sender name (only receiver sees it) */}
                   {!isMe && msg.sender && (
-                    <p
-                      className={`text-xs font-semibold mb-1 ${
-                        isMe ? "text-institution-100" : "text-slate-500"
-                      }`}
-                    >
+                    <p className="text-xs text-slate-500 font-semibold mb-1">
                       {msg.sender.firstName} {msg.sender.lastName}
                     </p>
                   )}
-                  <p>{msg.message}</p>
+
+                  {/* MESSAGE BUBBLE */}
                   <div
-                    className={`text-xs mt-1 ${
-                      isMe ? "text-institution-100" : "text-slate-400"
+                    className={`px-4 py-2 rounded-2xl text-sm shadow-sm break-words ${
+                      isMe
+                        ? "bg-institution-600 text-white rounded-br-sm"
+                        : "bg-white border border-slate-200 text-slate-900 rounded-bl-sm"
                     }`}
                   >
-                    {new Date(msg.sentAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    <p>{msg.message}</p>
+
+                    <div
+                      className={`text-xs mt-1 ${
+                        isMe ? "text-institution-100" : "text-slate-400"
+                      }`}
+                    >
+                      {new Date(msg.sentAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
             );
           })
         )}
+
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      {/* Input */}
+      {/* INPUT */}
       {conversationStatus === "Closed" ? (
         <div className="border rounded-md p-4 bg-slate-50 text-center">
           <p className="text-sm text-slate-600">
             This conversation has been closed.
           </p>
-
           <p className="text-xs text-slate-500 mt-1">
-            The assigned administrator closed this chat.
+            Your assigned administrator closed this chat.
           </p>
         </div>
       ) : (
         <div className="flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}

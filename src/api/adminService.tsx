@@ -8,4 +8,12 @@ export const adminService = {
     phoneNumber: string;
     password: string;
   }) => api.post("/Auth/create-junior-admin", data),
+
+  createSuperAdmin: (data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    password: string;
+  }) => api.post("/Auth/create-super-admin", data),
 };

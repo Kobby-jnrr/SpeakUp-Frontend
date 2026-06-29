@@ -14,7 +14,7 @@ import {
   AdminSettingsPage,
   AdminChatPage,
   AdminHomePageContentPage,
-  CreateJuniorAdminPage,
+  CreateAdminPage,
   Users,
 } from "./pages/admin";
 
@@ -303,7 +303,7 @@ export default function App() {
           element={
             <ProtectedRoute role="SuperAdmin">
               <AdminLayout>
-                <CreateJuniorAdminPage />
+                <CreateAdminPage />
               </AdminLayout>
             </ProtectedRoute>
           }

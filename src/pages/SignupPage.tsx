@@ -124,6 +124,7 @@ export default function SignupPage() {
               value={formData.department}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded-lg"
+              required
             />
           </div>
 

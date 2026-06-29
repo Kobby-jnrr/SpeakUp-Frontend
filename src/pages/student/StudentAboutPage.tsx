@@ -5,9 +5,21 @@ export function StudentAboutPage() {
     <div className="space-y-6">
       <Panel>
         <h1 className="text-2xl font-bold text-slate-950">About Us</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Centre for Gender Research, Advocacy and Documentation (CEGRAD),
-          University of Cape Coast
+        <p className="mt-2 text-sm text-slate-700 leading-6">
+          The Centre for Gender research, Advocacy and Documentation (CEGRAD) is
+          a non-teaching Centre established in the University of Cape Coast.
+          CEGRAD focuses mainly on Research, Advocacy and Outreach and operates
+          under two core departments, Research and Outreach and Advocacy who
+          support the Director in the delivery of the centre’s mandate, mission
+          and vision. CEGRAD began operation on the 1st August 2013 but was
+          officially opened on 16th September, 2015 by Prof. D. D. Kuupole, the
+          Vice Chancellor, 2013-2017. The setting up of CEGRAD was in response
+          to internal and external commitments, which included the Key thrust 2
+          of the University’s Strategic Plan, which aims at creating a conducive
+          working environment, which recognizes equal opportunities for
+          Faculties, Staff, and Students. The office location for CEGRAD is on
+          the last floor of the C. A. Ackah Lecture Theatre Complex (CALC),
+          adjacent the auditorium 900, UCC.
         </p>
       </Panel>
       <Panel>
@@ -37,7 +49,9 @@ export function StudentAboutPage() {
             </p>
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-950">What We Do</h2>
+            <h2 className="text-base font-bold text-slate-950">
+              Our Core Values
+            </h2>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>
                 Conduct gender research and document findings for policy
@@ -63,7 +77,9 @@ export function StudentAboutPage() {
             </ul>
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-950">Support Services</h2>
+            <h2 className="text-base font-bold text-slate-950">
+              Support Services
+            </h2>
             <p className="mt-2">
               Through this platform, students can report incidents
               confidentially, access counseling and emergency contacts, and

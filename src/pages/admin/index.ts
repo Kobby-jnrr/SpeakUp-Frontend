@@ -5,5 +5,5 @@ export { AdminResourcesPage } from "./AdminResourcesPage";
 export { AdminSettingsPage } from "./AdminSettingsPage";
 export { AdminChatPage } from "./AdminChatPage";
 export { AdminHomePageContentPage } from "./AdminHomePageContentPage";
-export { default as CreateJuniorAdminPage } from "./CreateJuniorAdminPage";
+export { default as CreateAdminPage } from "./CreateAdminPage";
 export { UsersPage as Users } from "./Users";
