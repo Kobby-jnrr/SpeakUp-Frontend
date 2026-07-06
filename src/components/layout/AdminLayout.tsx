@@ -85,9 +85,10 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
   const sidebar = (
     <aside
-      className={`flex h-full min-h-screen flex-col overflow-x-hidden
-      bg-[#082642] py-5 text-white transition-all
-      ${collapsed ? "w-[72px] items-center px-2" : "w-[260px] px-4"}`}
+      className={`flex flex-col overflow-y-auto overflow-x-hidden
+    bg-[#082642] py-5 text-white transition-all
+    h-screen sticky top-0
+    ${collapsed ? "w-[72px] items-center px-2" : "w-[260px] px-4"}`}
     >
       <div
         className={`flex items-center ${

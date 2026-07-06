@@ -4,6 +4,8 @@ export type ReportStatus = "Pending" | "InProgress" | "Resolved" | "Closed";
 
 export type Role_UI = "Student" | "JuniorAdmin" | "SuperAdmin";
 
+import type { ResourceCategory } from "../components/resources/resourceConfig";
+
 export interface User {
   id: string;
   firstName: string;
@@ -136,13 +138,17 @@ export interface NotificationItem {
 }
 
 export interface Resource {
-  id: string;
+  id: number;
   title: string;
-  category: string;
-  summary: string;
-  published: boolean;
+  summary?: string;
+  description: string;
+  category: ResourceCategory;
+  link?: string | null;
+  imageUrl?: string | null;
+  isPublished: boolean;
+  isPinned?: boolean;
+  createdAt: string;
   updatedAt: string;
-  contact?: string;
 }
 
 // Keep Report as alias for BackendReport for any remaining references

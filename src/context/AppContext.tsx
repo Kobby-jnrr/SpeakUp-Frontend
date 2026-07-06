@@ -52,6 +52,8 @@ interface LoginResult {
 interface AppContextValue {
   currentUser: User | null;
   role: Role | null;
+  theme: "light" | "dark";
+  setTheme: React.Dispatch<React.SetStateAction<"light" | "dark">>;
 
   login: (email: string, password: string) => Promise<LoginResult>;
   register: (data: any) => Promise<any>;
@@ -69,6 +71,22 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.classList.toggle("dark", savedTheme === "dark");
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("theme", theme);
+
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   /**
    * 🔁 Restore session from sessionStorage
@@ -158,7 +176,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     () => ({
       currentUser,
       role: currentUser?.role ?? null,
-
+      theme,
+      setTheme,
       login,
       register,
       logout,
