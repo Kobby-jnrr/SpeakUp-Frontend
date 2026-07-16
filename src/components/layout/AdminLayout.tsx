@@ -1,5 +1,4 @@
 import {
-  Bell,
   FileText,
   Home,
   LogOut,
@@ -13,6 +12,7 @@ import {
   ChevronRight,
   UserPlus,
   User,
+  X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -151,6 +151,31 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#f6f9fd]">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white lg:hidden">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-blue-700" />
+            <p className="font-bold text-slate-950">SpeakUp</p>
+          </div>
+
+          <Button
+            variant="secondary"
+            className="px-3"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            aria-label="Toggle navigation"
+          >
+            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        {open && (
+          <div className="fixed inset-x-0 top-[57px] z-40 h-[calc(100vh-57px)] overflow-y-auto lg:hidden">
+            {sidebar}
+          </div>
+        )}
+      </header>
+
       <div
         className={`min-h-screen lg:grid ${
           collapsed
@@ -159,6 +184,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         }`}
       >
         <div className="hidden lg:block">{sidebar}</div>
+
         <main className="min-w-0 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
