@@ -310,14 +310,12 @@ export function AdminReportsPage() {
                 </p>
 
                 <p className="text-xs text-slate-500">
-                  {r.incidentDate
-                    ? new Date(r.incidentDate).toLocaleDateString()
-                    : "No date"}
+                  Submitted {new Date(r.createdAt).toLocaleString()}
                 </p>
 
                 <p className="text-xs text-slate-600">
                   {r.assignedAdmin
-                    ? `Assigned to ${r.assignedAdmin.firstName}`
+                    ? `Assigned to ${r.assignedAdmin.lastName} ${r.assignedAdmin.firstName}`
                     : "Unassigned"}
                 </p>
 

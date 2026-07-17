@@ -127,9 +127,7 @@ export function AdminChatPage() {
   const getChatName = (c?: Conversation) => {
     if (!c) return "";
 
-    const report = c.reportId
-      ? `REP-${String(c.reportId).padStart(6, "0")}`
-      : c.chatType;
+    const report = c.reportCode ? c.reportCode : c.chatType;
 
     return `${c.studentName || "Unknown"} (${report})`;
   };

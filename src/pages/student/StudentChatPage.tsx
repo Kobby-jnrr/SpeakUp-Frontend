@@ -61,9 +61,7 @@ export function StudentChatPage() {
   const getChatTitle = (c?: Conversation) => {
     if (!c) return "";
 
-    const report = c.reportId
-      ? `REP-${String(c.reportId).padStart(6, "0")}`
-      : c.chatType;
+    const report = c.reportCode ? c.reportCode : c.chatType;
 
     const admin = c.assignedAdminName || "Unassigned Admin";
 
@@ -219,8 +217,10 @@ export function StudentChatPage() {
 
                   {reports.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.title}{" "}
-                      {r.assignedAdmin ? "(Assigned)" : "(No Admin Yet)"}
+                      {r.reportCode} - {r.title}{" "}
+                      {r.assignedAdmin
+                        ? `(Assigned to ${r.assignedAdmin.firstName} ${r.assignedAdmin.lastName})`
+                        : "(Pending Assignment)"}
                     </option>
                   ))}
                 </select>

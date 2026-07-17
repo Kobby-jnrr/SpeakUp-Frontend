@@ -82,6 +82,7 @@ export interface Conversation {
   unreadCount?: number;
 
   reportId?: number | null;
+  reportCode?: string | null;
 
   studentName?: string | null;
   assignedAdminId?: number | null;

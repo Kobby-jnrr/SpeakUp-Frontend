@@ -48,9 +48,7 @@ export function ChatConversationList({
   const isAdmin = currentUser?.role !== "Student";
 
   const formatTitle = (c: Conversation) => {
-    const report = c.reportId
-      ? `REP-${String(c.reportId).padStart(6, "0")}`
-      : c.chatType;
+    const report = c.reportCode ? c.reportCode : c.chatType;
 
     const name = isAdmin
       ? c.studentName || "Unknown Student"

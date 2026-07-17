@@ -102,20 +102,43 @@ export function QuickReportForm() {
           </div>
 
           {/* ANONYMOUS OPTION */}
-          <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
-            <input
-              type="checkbox"
-              checked={form.isAnonymous}
-              onChange={(e) => update("isAnonymous", e.target.checked)}
-            />
-            Submit anonymously
-          </label>
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.isAnonymous}
+                onChange={(e) => update("isAnonymous", e.target.checked)}
+                className="h-4 w-4"
+              />
+              Submit anonymously
+            </label>
 
-          {form.isAnonymous && (
-            <p className="text-xs text-slate-500">
-              Your identity will not be attached to this report.
-            </p>
-          )}
+            {form.isAnonymous && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <h3 className="text-sm font-semibold text-amber-800 mb-2">
+                  Anonymous Report Notice
+                </h3>
+
+                <p className="text-sm text-amber-700 leading-relaxed">
+                  Your identity will not be attached to this report. This means
+                  the report will{" "}
+                  <strong>not appear in your account history</strong> and you
+                  will not be identified as the person who submitted it.
+                </p>
+
+                <p className="text-sm text-amber-700 leading-relaxed mt-2">
+                  Please note that anonymous reports may take longer to process
+                  because administrators cannot contact you directly for
+                  clarification or additional information.
+                </p>
+
+                <p className="text-sm text-amber-700 leading-relaxed mt-2">
+                  If you are comfortable sharing your identity, submitting a
+                  normal report may allow faster follow-up and resolution.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </Panel>
 
