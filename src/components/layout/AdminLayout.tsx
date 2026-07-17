@@ -4,6 +4,7 @@ import {
   LogOut,
   Menu,
   MessageSquare,
+  ClipboardList,
   Settings,
   ShieldCheck,
   Wrench,
@@ -46,6 +47,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             to: "/admin/users",
             label: "Users",
             icon: User,
+          },
+          {
+            to: "/admin/audit-logs",
+            label: "Audit Logs",
+            icon: ClipboardList,
           },
         ]
       : []),

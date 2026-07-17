@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Shield, MessageSquare } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import { Button } from "../components/ui/Button";
 
 interface LoginFormState {
   email: string;
@@ -110,6 +111,7 @@ export default function LoginPage() {
                     setForm((p) => ({ ...p, email: e.target.value }))
                   }
                   className="w-full px-4 py-3 rounded-xl bg-slate-50 border focus:ring-2 focus:ring-institution-500"
+                  required
                 />
 
                 {/* PASSWORD */}
@@ -122,6 +124,7 @@ export default function LoginPage() {
                       setForm((p) => ({ ...p, password: e.target.value }))
                     }
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 border pr-12 focus:ring-2 focus:ring-institution-500"
+                    required
                   />
 
                   <button
@@ -139,13 +142,13 @@ export default function LoginPage() {
                   </button>
                 </div>
 
-                <button
+                <Button
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-institution-600 text-white py-3 rounded-xl font-semibold hover:bg-institution-700 transition"
+                  loading={loading}
+                  className="w-full rounded-xl py-3"
                 >
-                  {loading ? "Logging in..." : "Login"}
-                </button>
+                  Login
+                </Button>
               </form>
 
               <p className="text-center text-sm mt-6 text-slate-500">

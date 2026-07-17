@@ -129,7 +129,7 @@ export function AdminReportDetailsPage() {
               {report.title}
             </h1>
             <p className="text-sm text-slate-500 mt-1">
-              REP-{String(report.id).padStart(6, "0")} · Submitted{" "}
+              {report.reportCode} · Submitted{" "}
               {new Date(report.createdAt).toLocaleString()}
             </p>
           </div>

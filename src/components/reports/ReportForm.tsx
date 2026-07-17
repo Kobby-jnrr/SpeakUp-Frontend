@@ -446,8 +446,8 @@ export function ReportForm() {
       </Panel>
 
       <div className="flex justify-end">
-        <Button disabled={loading} onClick={submit}>
-          {loading ? "Submitting..." : "Submit Complaint"}
+        <Button loading={loading} onClick={submit}>
+          Submit Complaint
         </Button>
       </div>
     </div>

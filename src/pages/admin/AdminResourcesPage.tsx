@@ -22,6 +22,7 @@ export function AdminResourcesPage() {
   const [loading, setLoading] = useState(true);
 
   const [editing, setEditing] = useState<Resource | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -67,27 +68,35 @@ export function AdminResourcesPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const payload = { ...form };
+    try {
+      setSubmitting(true);
 
-    if (editing) {
-      await resourceService.update(editing.id, payload);
-      addToast({
-        title: "Updated",
-        message: "Resource updated",
-        tone: "success",
-      });
-    } else {
-      await resourceService.create(payload);
-      addToast({
-        title: "Created",
-        message: "Resource created",
-        tone: "success",
-      });
+      const payload = { ...form };
+
+      if (editing) {
+        await resourceService.update(editing.id, payload);
+
+        addToast({
+          title: "Updated",
+          message: "Resource updated",
+          tone: "success",
+        });
+      } else {
+        await resourceService.create(payload);
+
+        addToast({
+          title: "Created",
+          message: "Resource created",
+          tone: "success",
+        });
+      }
+
+      setShowForm(false);
+      reset();
+      load();
+    } finally {
+      setSubmitting(false);
     }
-
-    setShowForm(false);
-    reset();
-    load();
   };
 
   const edit = (r: Resource) => {
@@ -260,7 +269,9 @@ export function AdminResourcesPage() {
             </label>
 
             <div className="flex gap-2">
-              <Button type="submit">{editing ? "Update" : "Create"}</Button>
+              <Button type="submit" loading={submitting}>
+                {editing ? "Update" : "Create"}
+              </Button>
 
               <Button
                 type="button"
@@ -274,7 +285,6 @@ export function AdminResourcesPage() {
         </Panel>
       )}
       {/* LIST */}
-      {/* LIST (GROUPED + COLLAPSIBLE) */}
       <div className="space-y-6">
         {loading ? (
           <Panel>Loading...</Panel>

@@ -229,7 +229,7 @@ export function StudentDashboard() {
                   recentReports.map((r) => (
                     <tr key={r.id} className="border-t hover:bg-slate-50">
                       <td className="px-4 py-3 text-slate-400 text-xs">
-                        REP-{String(r.id).padStart(6, "0")}
+                        {r.reportCode}
                       </td>
                       <td className="px-4 py-3">
                         <Link

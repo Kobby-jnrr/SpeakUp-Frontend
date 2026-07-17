@@ -107,19 +107,6 @@ export function AdminSettingsPage() {
         </Button>
       </Panel>
 
-      {/* SECURITY */}
-      <Panel>
-        <h2 className="mb-4 text-base font-semibold">Security</h2>
-
-        <p className="text-sm text-slate-600">
-          Admin actions are logged automatically for audit purposes.
-        </p>
-
-        <Button variant="secondary" className="mt-3">
-          View Audit Logs
-        </Button>
-      </Panel>
-
       {/* DANGER ZONE */}
       <Panel>
         <h2 className="mb-4 text-base font-semibold text-red-600">

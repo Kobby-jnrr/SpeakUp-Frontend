@@ -20,6 +20,7 @@ export interface User {
 /** Matches the backend Report response (both /my and /all) */
 export interface BackendReport {
   id: number;
+  reportCode: string;
   title: string;
   description: string;
   type: "Full" | "Quick";

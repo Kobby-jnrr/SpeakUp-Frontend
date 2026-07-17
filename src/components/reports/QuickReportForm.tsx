@@ -121,8 +121,8 @@ export function QuickReportForm() {
 
       {/* ACTIONS */}
       <div className="flex justify-end">
-        <Button disabled={loading} onClick={submit}>
-          {loading ? "Submitting..." : "Submit Quick Report"}
+        <Button loading={loading} onClick={submit}>
+          Submit Quick Report
         </Button>
       </div>
     </div>

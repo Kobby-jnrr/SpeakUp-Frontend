@@ -11,6 +11,7 @@ import {
   AdminReportDetailsPage,
   AdminReportsPage,
   AdminResourcesPage,
+  AdminAuditLogsPage,
   AdminSettingsPage,
   AdminChatPage,
   AdminHomePageContentPage,
@@ -304,6 +305,17 @@ export default function App() {
             <ProtectedRoute role="SuperAdmin">
               <AdminLayout>
                 <CreateAdminPage />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/audit-logs"
+          element={
+            <ProtectedRoute role="SuperAdmin">
+              <AdminLayout>
+                <AdminAuditLogsPage />
               </AdminLayout>
             </ProtectedRoute>
           }

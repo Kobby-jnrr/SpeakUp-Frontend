@@ -7,3 +7,4 @@ export { AdminChatPage } from "./AdminChatPage";
 export { AdminHomePageContentPage } from "./AdminHomePageContentPage";
 export { default as CreateAdminPage } from "./CreateAdminPage";
 export { UsersPage as Users } from "./Users";
+export { AdminAuditLogsPage } from "./AdminAuditLogsPage";

@@ -183,7 +183,7 @@ export function StudentReportsPage() {
                   >
                     <td className="px-4 py-3">
                       <span className="font-medium text-slate-900">
-                        REP-{String(r.id).padStart(6, "0")}
+                        {r.reportCode}
                       </span>
 
                       {r.confidential && (
@@ -255,7 +255,7 @@ export function StudentReportsPage() {
               <div className="flex justify-between items-start gap-4">
                 <div>
                   <h3 className="font-semibold text-slate-900">
-                    Quick Report #{String(r.id).padStart(6, "0")}
+                    {r.reportCode}
                   </h3>
 
                   <p className="text-sm text-slate-600 mt-1 line-clamp-2">

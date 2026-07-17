@@ -53,7 +53,7 @@ export function AdminReportsPage() {
         const matchesSearch =
           !searchTerm ||
           [
-            `rep-${String(r.id).padStart(6, "0")}`,
+            r.reportCode,
             r.title,
             r.description,
             r.status,
@@ -223,7 +223,7 @@ export function AdminReportsPage() {
                     className="border-b hover:bg-slate-50 transition"
                   >
                     <td className="px-4 py-3 font-medium text-slate-900">
-                      REP-{String(r.id).padStart(6, "0")}
+                      {r.reportCode}
                       {r.confidential && (
                         <span className="ml-2 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
                           Confidential
@@ -288,9 +288,7 @@ export function AdminReportsPage() {
             <Panel key={r.id} className="border-l-4 border-institution-600">
               <div className="space-y-2">
                 <div className="flex justify-between items-start">
-                  <p className="font-semibold text-slate-900">
-                    REP-{String(r.id).padStart(6, "0")}
-                  </p>
+                  <p className="font-semibold text-slate-900">{r.reportCode}</p>
 
                   <span
                     className={`px-2 py-0.5 rounded text-xs font-semibold ${

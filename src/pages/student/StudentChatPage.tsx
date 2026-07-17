@@ -123,9 +123,19 @@ export function StudentChatPage() {
           return;
         }
 
-        const existing = await chatConversationService.getByReport(report.id);
+        let existingId = null;
 
-        const existingId = existing.data?.id;
+        try {
+          const existing = await chatConversationService.getByReport(report.id);
+
+          existingId = existing.data?.id;
+        } catch (err: any) {
+          if (err.response?.status !== 404) {
+            throw err;
+          }
+        }
+
+        // If chat already exists
         if (existingId) {
           setSelectedConversationId(existingId);
           return;

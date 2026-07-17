@@ -233,8 +233,8 @@ export function AdminHomePageContentPage() {
               </Field>
             </div>
 
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Creating..." : "Create"}
+            <Button type="submit" loading={submitting}>
+              Create
             </Button>
           </form>
         </Panel>

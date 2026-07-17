@@ -16,4 +16,6 @@ export const adminService = {
     phoneNumber: string;
     password: string;
   }) => api.post("/Auth/create-super-admin", data),
+
+  deleteUser: (id: number) => api.delete(`/Auth/delete-user/${id}`),
 };

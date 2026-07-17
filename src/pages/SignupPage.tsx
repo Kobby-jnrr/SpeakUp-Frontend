@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../api/authService";
+import { Button } from "../components/ui/Button";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -160,13 +161,13 @@ export default function SignupPage() {
             required
           />
 
-          <button
+          <Button
             type="submit"
-            disabled={loading}
-            className="w-full bg-institution-600 text-white py-2 rounded-lg disabled:opacity-50"
+            loading={loading}
+            className="w-full py-2 rounded-lg"
           >
-            {loading ? "Creating Account..." : "Sign Up"}
-          </button>
+            Sign Up
+          </Button>
         </form>
 
         <p className="text-sm text-center mt-6">

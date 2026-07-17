@@ -3,6 +3,8 @@ import { useApp } from "../../context/AppContext";
 import { Panel } from "../../components/ui/Cards";
 import { Button } from "../../components/ui/Button";
 import { userService } from "../../api/userService";
+import { Trash2 } from "lucide-react";
+import { adminService } from "../../api/adminService";
 
 type User = {
   id: number;
@@ -23,6 +25,7 @@ export function UsersPage() {
   const [tab, setTab] = useState<Tab>("staff");
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const loadUsers = async (selected: Tab) => {
     setLoading(true);
@@ -45,6 +48,36 @@ export function UsersPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (user: User) => {
+    const confirmed = window.confirm(
+      `Delete ${user.firstName} ${user.lastName}?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(user.id);
+
+      await adminService.deleteUser(user.id);
+
+      addToast({
+        title: "Success",
+        message: "User deleted successfully",
+        tone: "success",
+      });
+
+      loadUsers(tab);
+    } catch (error: any) {
+      addToast({
+        title: "Delete Failed",
+        message: error.response?.data || "Unable to delete user",
+        tone: "error",
+      });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -107,6 +140,7 @@ export function UsersPage() {
                   <th>Email</th>
                   <th>Role</th>
                   {tab === "students" && <th>Department</th>}
+                  <th className="text-center">Action</th>
                 </tr>
               </thead>
 
@@ -114,16 +148,34 @@ export function UsersPage() {
                 {users.map((u) => (
                   <tr key={u.id} className="border-b hover:bg-slate-50">
                     <td className="py-2">{u.id}</td>
+
                     <td>
                       {u.firstName} {u.lastName}
                     </td>
+
                     <td>{u.email}</td>
+
                     <td>
                       <span className="px-2 py-1 text-xs rounded bg-slate-200">
                         {u.role}
                       </span>
                     </td>
+
                     {tab === "students" && <td>{u.department || "-"}</td>}
+
+                    <td className="text-center">
+                      {u.role !== "SuperAdmin" && (
+                        <Button
+                          onClick={() => handleDelete(u)}
+                          disabled={deletingId === u.id}
+                          className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 mx-auto"
+                        >
+                          <Trash2 className="h-4 w-4" />
+
+                          {deletingId === u.id ? "Deleting..." : "Delete"}
+                        </Button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
