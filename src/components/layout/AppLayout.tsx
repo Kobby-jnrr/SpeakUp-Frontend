@@ -9,8 +9,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
       </a>
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <Link to="/" className="text-base font-bold text-institution-900">
-            SpeakUp Portal
+          <Link to="/" className="flex items-center gap-2">
+            <img
+              src="/images/speaks.png"
+              alt="SpeakUp Logo"
+              className="h-12 w-auto"
+            />
           </Link>
           <div className="flex gap-2">
             <Link

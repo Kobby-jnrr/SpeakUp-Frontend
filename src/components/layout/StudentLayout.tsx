@@ -18,7 +18,6 @@ import {
   Menu,
   Search,
   Settings,
-  ShieldCheck,
   X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
@@ -119,8 +118,12 @@ export function StudentLayout({ children }: { children: ReactNode }) {
         className={`flex items-center ${collapsed ? "justify-center px-0" : "justify-between px-1"}`}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-blue-600">
-            <ShieldCheck className="h-6 w-6" aria-hidden="true" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-white">
+            <img
+              src="/images/speaks2.png"
+              alt="SpeakUp Logo"
+              className="h-9 w-9 object-contain"
+            />
           </div>
           {!collapsed && (
             <div>
@@ -217,7 +220,12 @@ export function StudentLayout({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white lg:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-blue-700" />
+            <img
+              src="/images/speaks2.png"
+              alt="SpeakUp Logo"
+              className="h-7 w-7 object-contain"
+            />
+
             <p className="font-bold text-slate-950">SpeakUp</p>
           </div>
           <Button

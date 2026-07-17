@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff, Shield, MessageSquare } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  MessageCircle,
+  FileCheck,
+  ArrowLeft,
+} from "lucide-react";
+import { motion } from "framer-motion";
+
 import { useApp } from "../context/AppContext";
 import { Button } from "../components/ui/Button";
 
@@ -24,6 +33,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setError("");
     setLoading(true);
 
@@ -36,108 +46,291 @@ export default function LoginPage() {
         navigate("/student/home");
       }
     } catch (err: any) {
-      setError(err.response?.data || "Invalid login credentials");
+      setError(
+        err.response?.data || "Invalid email or password. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-200 via-slate-100 to-institution-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl overflow-hidden rounded-3xl shadow-2xl">
+    <div className="min-h-screen bg-[#f6f9fd] flex items-center justify-center px-4 py-10">
+      {/* BACK HOME */}
+
+      <Link
+        to="/"
+        className="
+        fixed left-6 top-6
+        flex items-center gap-2
+        text-sm text-slate-600
+        transition hover:text-blue-700
+        "
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to SpeakUp
+      </Link>
+
+      <motion.div
+        initial={{
+          opacity: 0,
+          y: 30,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
+        transition={{
+          duration: 0.6,
+        }}
+        className="
+        w-full max-w-6xl
+        overflow-hidden
+        rounded-3xl
+        border border-blue-100
+        bg-white
+        shadow-xl
+        "
+      >
         <div className="grid lg:grid-cols-2">
-          {/* LEFT SIDE */}
-          <div className="hidden lg:flex flex-col justify-between bg-institution-600 text-white p-12">
+          {/* BRAND SIDE */}
+
+          <div
+            className="
+            hidden lg:flex
+            flex-col
+            justify-between
+            bg-[#082642]
+            p-12
+            text-white
+            "
+          >
             <div>
-              <div className="flex items-center gap-3 mb-10">
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                  <Shield />
+              <div className="flex items-center gap-3">
+                <div
+                  className="
+                flex h-12 w-12
+                items-center justify-center
+                rounded-xl
+                bg-white
+                "
+                >
+                  <img
+                    src="/images/speaks.png"
+                    alt="SpeakUp Logo"
+                    className="h-10 w-10 object-contain"
+                  />
                 </div>
+
                 <div>
                   <h2 className="text-2xl font-bold">SpeakUp</h2>
-                  <p className="text-white/70 text-sm">
-                    Student Protection System
+
+                  <p className="text-sm text-blue-100">
+                    Student Safety Platform
                   </p>
                 </div>
               </div>
 
-              <h1 className="text-5xl font-extrabold leading-tight">
+              <h1
+                className="
+              mt-12
+              text-5xl
+              font-extrabold
+              leading-tight
+              "
+              >
                 Speak Up.
                 <br />
                 Stay Safe.
               </h1>
 
-              <p className="mt-6 text-white/80">
-                Confidential reporting, secure messaging, and real-time case
-                tracking.
+              <p
+                className="
+              mt-6
+              max-w-md
+              leading-7
+              text-blue-100
+              "
+              >
+                A secure university platform that allows students to report
+                incidents, seek support, and communicate with authorized
+                personnel confidentially.
               </p>
             </div>
 
-            <div className="space-y-4 text-sm">
-              <div className="flex items-center gap-3">
-                <Shield /> Anonymous Reporting
-              </div>
-              <div className="flex items-center gap-3">
-                <MessageSquare /> Secure Chat System
-              </div>
-              <div className="flex items-center gap-3">
-                <Shield /> Case Monitoring
-              </div>
+            <div className="space-y-5">
+              <InfoItem
+                icon={<ShieldCheck />}
+                text="Confidential incident reporting"
+              />
+
+              <InfoItem
+                icon={<MessageCircle />}
+                text="Secure communication with support staff"
+              />
+
+              <InfoItem
+                icon={<FileCheck />}
+                text="Track your case progress easily"
+              />
             </div>
           </div>
 
-          {/* RIGHT SIDE */}
-          <div className="bg-white/80 backdrop-blur p-8 sm:p-12 flex items-center justify-center">
-            <div className="w-full max-w-md">
-              <h1 className="text-3xl font-bold text-slate-900">
-                Welcome Back
-              </h1>
+          {/* FORM SIDE */}
 
-              <p className="text-slate-500 mt-1">Login to continue</p>
+          <div
+            className="
+          flex
+          items-center
+          justify-center
+          p-8
+          sm:p-12
+          "
+          >
+            <div className="w-full max-w-md">
+              <h2
+                className="
+              text-3xl
+              font-bold
+              text-slate-950
+              "
+              >
+                Welcome Back
+              </h2>
+
+              <p className="mt-2 text-sm text-slate-600">
+                Login to access your SpeakUp account.
+              </p>
 
               {error && (
-                <div className="mt-4 bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  className="
+                    mt-5
+                    rounded-xl
+                    border
+                    border-red-200
+                    bg-red-50
+                    p-3
+                    text-sm
+                    text-red-600
+                    "
+                >
                   {error}
-                </div>
+                </motion.div>
               )}
 
-              <form onSubmit={handleLogin} className="mt-6 space-y-5">
-                {/* EMAIL */}
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  value={form.email}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, email: e.target.value }))
-                  }
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border focus:ring-2 focus:ring-institution-500"
-                  required
-                />
+              <form onSubmit={handleLogin} className="mt-7 space-y-5">
+                <div>
+                  <label
+                    className="
+                  text-sm
+                  font-medium
+                  text-slate-700
+                  "
+                  >
+                    Email Address
+                  </label>
 
-                {/* PASSWORD */}
-                <div className="relative">
                   <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={form.password}
+                    type="email"
+                    value={form.email}
+                    placeholder="student@example.com"
                     onChange={(e) =>
-                      setForm((p) => ({ ...p, password: e.target.value }))
+                      setForm((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
                     }
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border pr-12 focus:ring-2 focus:ring-institution-500"
+                    className="
+                    mt-2
+                    w-full
+                    rounded-xl
+                    border
+                    border-slate-200
+                    bg-slate-50
+                    px-4
+                    py-3
+                    outline-none
+                    transition
+                    focus:border-blue-600
+                    focus:ring-2
+                    focus:ring-blue-600/20
+                    "
                     required
                   />
+                </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-3 text-slate-500"
+                <div>
+                  <label
+                    className="
+                  text-sm
+                  font-medium
+                  text-slate-700
+                  "
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                    Password
+                  </label>
+
+                  <div className="relative mt-2">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={form.password}
+                      placeholder="Enter password"
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
+                      className="
+                      w-full
+                      rounded-xl
+                      border
+                      border-slate-200
+                      bg-slate-50
+                      px-4
+                      py-3
+                      pr-12
+                      outline-none
+                      transition
+                      focus:border-blue-600
+                      focus:ring-2
+                      focus:ring-blue-600/20
+                      "
+                      required
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="
+                      absolute
+                      right-4
+                      top-3
+                      text-slate-500
+                      hover:text-blue-600
+                      "
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="text-right">
-                  <button className="text-sm text-institution-600 hover:underline">
+                  <button
+                    type="button"
+                    className="
+                    text-sm
+                    text-blue-600
+                    hover:underline
+                    "
+                  >
                     Forgot password?
                   </button>
                 </div>
@@ -145,25 +338,61 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   loading={loading}
-                  className="w-full rounded-xl py-3"
+                  className="
+                  w-full
+                  rounded-xl
+                  bg-blue-600
+                  py-3
+                  hover:bg-blue-700
+                  "
                 >
                   Login
                 </Button>
               </form>
 
-              <p className="text-center text-sm mt-6 text-slate-500">
-                Don't have an account?{" "}
+              <p
+                className="
+              mt-7
+              text-center
+              text-sm
+              text-slate-600
+              "
+              >
+                Don't have an account?
                 <Link
-                  className="text-institution-600 font-semibold"
                   to="/register"
+                  className="
+                  ml-1
+                  font-semibold
+                  text-blue-600
+                  hover:underline
+                  "
                 >
-                  Sign up
+                  Create one
                 </Link>
               </p>
             </div>
           </div>
         </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function InfoItem({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className="
+      rounded-lg
+      bg-white/10
+      p-2
+      "
+      >
+        {icon}
       </div>
+
+      <p className="text-sm text-blue-50">{text}</p>
     </div>
   );
 }
