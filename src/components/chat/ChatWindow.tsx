@@ -24,10 +24,7 @@ export function ChatWindow({
   const [sending, setSending] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const isNearBottomRef = useRef(true);
 
   /* ---------------- LOAD MESSAGES ---------------- */
   const loadMessages = async (showLoader = false) => {
@@ -36,6 +33,7 @@ export function ChatWindow({
     try {
       const res = await chatMessageService.getMessages(conversationId);
       setMessages(res.data);
+      await chatMessageService.markConversationAsRead(conversationId);
     } catch {
       if (showLoader) {
         addToast({
@@ -60,24 +58,6 @@ export function ChatWindow({
     return () => clearInterval(interval);
   }, [conversationId]);
 
-  /* ---------------- SCROLL TRACKING ---------------- */
-  const handleScroll = () => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-
-    const threshold = 80;
-    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
-
-    isNearBottomRef.current = distance < threshold;
-  };
-
-  /* ---------------- AUTO SCROLL ---------------- */
-  useEffect(() => {
-    if (isNearBottomRef.current) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
-
   /* ---------------- MARK AS READ ---------------- */
   useEffect(() => {
     const markAsRead = async () => {
@@ -101,6 +81,23 @@ export function ChatWindow({
     setSending(true);
 
     try {
+      const tempMessage: ChatMessage = {
+        id: Date.now(),
+        chatConversationId: conversationId,
+        message: text,
+        sentAt: new Date().toISOString(),
+        isRead: false,
+
+        sender: {
+          id: Number(currentUser?.id),
+          name: `${currentUser?.firstName} ${currentUser?.lastName}`,
+          role: currentUser?.role || "",
+          isCurrentUser: true,
+        },
+      };
+
+      setMessages((prev) => [...prev, tempMessage]);
+
       await chatMessageService.sendMessage({
         conversationId,
         message: text,
@@ -148,7 +145,6 @@ export function ChatWindow({
       {/* MESSAGES */}
       <div
         ref={scrollContainerRef}
-        onScroll={handleScroll}
         className="flex-1 overflow-y-auto space-y-3 bg-slate-50 p-4 rounded-md mb-4"
       >
         {messages.length === 0 ? (
@@ -184,14 +180,24 @@ export function ChatWindow({
                     <p>{msg.message}</p>
 
                     <div
-                      className={`text-xs mt-1 ${
-                        isMe ? "text-institution-100" : "text-slate-400"
+                      className={`flex items-center justify-end gap-1 text-[10px] mt-1 ${
+                        isMe ? "text-institution-100/80" : "text-slate-400"
                       }`}
                     >
-                      {new Date(msg.sentAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      <div className="flex gap-2 items-center">
+                        <span>
+                          {new Date(msg.sentAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+
+                        {isMe && (
+                          <span className="text-[9px] opacity-70">
+                            {msg.isRead ? "Read" : "Sent"}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -199,8 +205,6 @@ export function ChatWindow({
             );
           })
         )}
-
-        <div ref={bottomRef} />
       </div>
 
       {/* INPUT */}

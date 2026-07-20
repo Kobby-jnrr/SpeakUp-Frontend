@@ -115,26 +115,41 @@ export function QuickReportForm() {
 
             {form.isAnonymous && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                <h3 className="text-sm font-semibold text-amber-800 mb-2">
+                <h3 className="text-sm-semibold text-amber-800 mb-2">
                   Anonymous Report Notice
                 </h3>
 
                 <p className="text-sm text-amber-700 leading-relaxed">
-                  Your identity will not be attached to this report. This means
-                  the report will{" "}
-                  <strong>not appear in your account history</strong> and you
-                  will not be identified as the person who submitted it.
+                  Your identity will be hidden from administrators when this
+                  report is submitted anonymously. The assigned administrator
+                  will only see that the report was submitted by an{" "}
+                  <strong>Anonymous User</strong>.
                 </p>
 
                 <p className="text-sm text-amber-700 leading-relaxed mt-2">
-                  Please note that anonymous reports may take longer to process
-                  because administrators cannot contact you directly for
-                  clarification or additional information.
+                  Your report will still be saved securely in your account so
+                  you can track its progress and continue communication through
+                  the platform without revealing your identity.
                 </p>
 
                 <p className="text-sm text-amber-700 leading-relaxed mt-2">
-                  If you are comfortable sharing your identity, submitting a
-                  normal report may allow faster follow-up and resolution.
+                  Administrators may communicate with you through the anonymous
+                  chat system if they need additional information or
+                  clarification about your report.
+                </p>
+
+                <p className="text-sm text-amber-700 leading-relaxed mt-2">
+                  To help us review and resolve your case faster, please provide
+                  as many relevant details as possible. Reports with clear
+                  descriptions, dates, locations, supporting information, or
+                  other useful details may receive priority during the review
+                  process.
+                </p>
+
+                <p className="text-sm text-amber-700 leading-relaxed mt-2">
+                  If you choose to submit a normal report, your identity will be
+                  visible to authorized administrators to allow direct
+                  follow-up.
                 </p>
               </div>
             )}

@@ -33,21 +33,21 @@ export function StudentChatPage() {
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
 
+  const loadConversations = async () => {
+    const [chatRes, reportRes] = await Promise.all([
+      chatConversationService.getMyConversations(),
+      reportService.getMyReports(),
+    ]);
+
+    setConversations(
+      Array.isArray(chatRes.data) ? chatRes.data : (chatRes.data.items ?? []),
+    );
+
+    setReports(reportRes.data);
+  };
+
   useEffect(() => {
-    const load = async () => {
-      const [chatRes, reportRes] = await Promise.all([
-        chatConversationService.getMyConversations(),
-        reportService.getMyReports(),
-      ]);
-
-      setConversations(
-        Array.isArray(chatRes.data) ? chatRes.data : (chatRes.data.items ?? []),
-      );
-
-      setReports(reportRes.data);
-    };
-
-    load();
+    loadConversations();
   }, []);
 
   const currentConversation = conversations.find(
@@ -76,8 +76,11 @@ export function StudentChatPage() {
           isAnonymous,
         });
 
-        const id = res.data?.id || res.data?.Id;
-        setSelectedConversationId(Number(id));
+        const id = Number(res.data?.id || res.data?.Id);
+
+        setSelectedConversationId(id);
+
+        await loadConversations();
 
         addToast({
           title:
@@ -177,27 +180,6 @@ export function StudentChatPage() {
 
           <form onSubmit={handleCreate} className="space-y-4">
             <Field label="Chat Type">
-              {/* ANONYMOUS OPTION */}
-              {(chatType === "Support" || chatType === "Counseling") && (
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isAnonymous}
-                    onChange={(e) => setIsAnonymous(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300"
-                  />
-
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">
-                      Chat anonymously
-                    </p>
-
-                    <p className="text-xs text-slate-500">
-                      Your identity will not be shown to the administrator.
-                    </p>
-                  </div>
-                </label>
-              )}
               <select
                 className={inputClass}
                 value={chatType}
@@ -233,6 +215,28 @@ export function StudentChatPage() {
                   ))}
                 </select>
               </Field>
+            )}
+
+            {/* ANONYMOUS OPTION */}
+            {(chatType === "Support" || chatType === "Counseling") && (
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isAnonymous}
+                  onChange={(e) => setIsAnonymous(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">
+                    Chat anonymously
+                  </p>
+
+                  <p className="text-xs text-slate-500">
+                    Your identity will not be shown to the administrator.
+                  </p>
+                </div>
+              </label>
             )}
 
             <Button type="submit" disabled={creating}>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { Button } from "../ui/Button";
@@ -54,6 +54,17 @@ export function ReportForm() {
     confidential: false,
   });
 
+  const fieldRefs = {
+    fullName: useRef<HTMLDivElement>(null),
+    gender: useRef<HTMLDivElement>(null),
+    email: useRef<HTMLDivElement>(null),
+    respondentName: useRef<HTMLDivElement>(null),
+    incidentDate: useRef<HTMLDivElement>(null),
+    incidentLocation: useRef<HTMLDivElement>(null),
+    complaintNature: useRef<HTMLDivElement>(null),
+    description: useRef<HTMLDivElement>(null),
+  };
+
   const update = (key: keyof typeof form, value: string | boolean | string[]) =>
     setForm((current) => ({ ...current, [key]: value as never }));
 
@@ -73,27 +84,55 @@ export function ReportForm() {
     const nextErrors: Record<string, string> = {};
 
     if (!form.fullName.trim()) nextErrors.fullName = "Enter your full name.";
+
     if (!form.complainantGender.trim())
       nextErrors.complainantGender = "Enter your gender.";
+
     if (!form.email.trim()) nextErrors.email = "Enter your email address.";
+
     if (!form.respondentName.trim())
       nextErrors.respondentName = "Enter the respondent's full name.";
+
     if (!form.incidentDate)
       nextErrors.incidentDate = "Enter the incident date.";
+
     if (form.incidentDate && new Date(form.incidentDate) > new Date()) {
       nextErrors.incidentDate = "Incident date cannot be in the future.";
     }
+
     if (!form.incidentLocation.trim())
-      nextErrors.incidentLocation = "Enter the incident location.";
+      nextErrors.incidentLocation = "Select where the incident happened.";
+
     if (form.complaintNature.length === 0)
       nextErrors.complaintNature = "Select at least one complaint nature.";
+
     if (form.description.trim().length < 40) {
       nextErrors.description =
         "Provide at least 40 characters describing the incident.";
     }
 
     setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+
+    const firstError = Object.keys(nextErrors)[0];
+
+    if (firstError) {
+      const ref = fieldRefs[firstError as keyof typeof fieldRefs];
+
+      ref?.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      addToast({
+        title: "Incomplete Form",
+        message: nextErrors[firstError],
+        tone: "error",
+      });
+
+      return false;
+    }
+
+    return true;
   };
 
   const submit = async () => {
@@ -175,25 +214,29 @@ export function ReportForm() {
           Section A: Complainant Details
         </h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <Field label="Full Name" error={errors.fullName} required>
-            <input className={inputClass} value={form.fullName} readOnly />
-          </Field>
-          <Field label="Gender" error={errors.complainantGender} required>
-            <input
-              className={inputClass}
-              value={form.complainantGender}
-              readOnly={!!currentUser?.gender}
-              onChange={(e) => update("complainantGender", e.target.value)}
-            />
-          </Field>
+          <div ref={fieldRefs.fullName}>
+            <Field label="Full Name" error={errors.fullName} required>
+              <input className={inputClass} value={form.fullName} readOnly />
+            </Field>
+          </div>
 
-          {/* ✅ Student ID REMOVED */}
+          <div ref={fieldRefs.gender}>
+            <Field label="Gender" error={errors.complainantGender} required>
+              <input
+                className={inputClass}
+                value={form.complainantGender}
+                readOnly={!!currentUser?.gender}
+                onChange={(e) => update("complainantGender", e.target.value)}
+              />
+            </Field>
+          </div>
 
           <Field label="Department/Unit">
             <input
               className={inputClass}
               value={form.department}
               onChange={(e) => update("department", e.target.value)}
+              readOnly
             />
           </Field>
           <Field label="Contact Number">
@@ -203,14 +246,17 @@ export function ReportForm() {
               onChange={(e) => update("contactNumber", e.target.value)}
             />
           </Field>
-          <Field label="Email Address" error={errors.email} required>
-            <input
-              className={inputClass}
-              type="email"
-              value={form.email}
-              readOnly
-            />
-          </Field>
+
+          <div ref={fieldRefs.email}>
+            <Field label="Email Address" error={errors.email} required>
+              <input
+                className={inputClass}
+                type="email"
+                value={form.email}
+                readOnly
+              />
+            </Field>
+          </div>
         </div>
       </Panel>
 
@@ -220,13 +266,16 @@ export function ReportForm() {
           Section B: Respondent Details
         </h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <Field label="Full Name" error={errors.respondentName} required>
-            <input
-              className={inputClass}
-              value={form.respondentName}
-              onChange={(e) => update("respondentName", e.target.value)}
-            />
-          </Field>
+          <div ref={fieldRefs.respondentName}>
+            <Field label="Full Name" error={errors.respondentName} required>
+              <input
+                className={inputClass}
+                value={form.respondentName}
+                onChange={(e) => update("respondentName", e.target.value)}
+              />
+            </Field>
+          </div>
+
           <Field label="Position ( Student, Lecturer...)">
             <input
               className={inputClass}
@@ -260,14 +309,17 @@ export function ReportForm() {
         </h2>
 
         <div className="mt-5 grid gap-4 md:grid-cols-3">
-          <Field label="Date" error={errors.incidentDate} required>
-            <input
-              className={inputClass}
-              type="date"
-              value={form.incidentDate}
-              onChange={(e) => update("incidentDate", e.target.value)}
-            />
-          </Field>
+          <div ref={fieldRefs.incidentDate}>
+            <Field label="Date" error={errors.incidentDate} required>
+              <input
+                className={inputClass}
+                type="date"
+                value={form.incidentDate}
+                onChange={(e) => update("incidentDate", e.target.value)}
+              />
+            </Field>
+          </div>
+
           <Field label="Time">
             <input
               className={inputClass}
@@ -276,31 +328,34 @@ export function ReportForm() {
               onChange={(e) => update("incidentTime", e.target.value)}
             />
           </Field>
-          <Field label="Location" error={errors.incidentLocation} required>
-            <div className="mt-2 flex flex-col gap-2">
-              {["Physical", "Online", "Both"].map((option) => (
-                <label
-                  key={option}
-                  className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={form.incidentLocation === option}
-                    onChange={() =>
-                      update(
-                        "incidentLocation",
-                        form.incidentLocation === option ? "" : option,
-                      )
-                    }
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </Field>
+
+          <div ref={fieldRefs.incidentLocation}>
+            <Field label="Location" error={errors.incidentLocation} required>
+              <div className="mt-2 flex flex-col gap-2">
+                {["Physical", "Online", "Both"].map((option) => (
+                  <label
+                    key={option}
+                    className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={form.incidentLocation === option}
+                      onChange={() =>
+                        update(
+                          "incidentLocation",
+                          form.incidentLocation === option ? "" : option,
+                        )
+                      }
+                    />
+                    {option}
+                  </label>
+                ))}
+              </div>
+            </Field>
+          </div>
         </div>
 
-        <div className="mt-5">
+        <div ref={fieldRefs.complaintNature} className="mt-5">
           <p className="text-sm font-semibold text-slate-800">
             Nature of Complaint *
           </p>
@@ -332,13 +387,15 @@ export function ReportForm() {
         </div>
 
         <div className="mt-5">
-          <Field label="Description" error={errors.description} required>
-            <textarea
-              className={`${inputClass} min-h-44`}
-              value={form.description}
-              onChange={(e) => update("description", e.target.value)}
-            />
-          </Field>
+          <div ref={fieldRefs.description}>
+            <Field label="Description" error={errors.description} required>
+              <textarea
+                className={`${inputClass} min-h-44`}
+                value={form.description}
+                onChange={(e) => update("description", e.target.value)}
+              />
+            </Field>
+          </div>
         </div>
       </Panel>
 
