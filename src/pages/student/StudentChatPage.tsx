@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MessageSquare, Plus } from "lucide-react";
-
 import { ChatWindow } from "../../components/chat/ChatWindow";
 import { ChatConversationList } from "../../components/chat/ChatConversationList";
 import { Button } from "../../components/ui/Button";
@@ -28,12 +27,11 @@ export function StudentChatPage() {
   const [chatType, setChatType] = useState<"Support" | "Report" | "Counseling">(
     "Support",
   );
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [reports, setReports] = useState<BackendReport[]>([]);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
-
-  /* ---------------- LOAD DATA ---------------- */
 
   useEffect(() => {
     const load = async () => {
@@ -56,8 +54,6 @@ export function StudentChatPage() {
     (c) => c.id === selectedConversationId,
   );
 
-  /* ---------------- CHAT TITLE ---------------- */
-
   const getChatTitle = (c?: Conversation) => {
     if (!c) return "";
 
@@ -68,19 +64,16 @@ export function StudentChatPage() {
     return `${admin} (${report})`;
   };
 
-  /* ---------------- CREATE CHAT ---------------- */
-
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
 
     try {
-      // ================= SUPPORT / COUNSELING CHAT =================
       if (chatType === "Support" || chatType === "Counseling") {
         const res = await chatConversationService.createConversation({
           chatType,
           reportId: null,
-          isAnonymous: false,
+          isAnonymous,
         });
 
         const id = res.data?.id || res.data?.Id;
@@ -99,7 +92,6 @@ export function StudentChatPage() {
         return;
       }
 
-      // ================= REPORT CHAT =================
       if (chatType === "Report") {
         const report = reports.find((r) => r.id === selectedReportId);
 
@@ -133,7 +125,6 @@ export function StudentChatPage() {
           }
         }
 
-        // If chat already exists
         if (existingId) {
           setSelectedConversationId(existingId);
           return;
@@ -161,8 +152,6 @@ export function StudentChatPage() {
     }
   };
 
-  /* ---------------- UI ---------------- */
-
   return (
     <div className="space-y-6">
       {/* HEADER */}
@@ -182,14 +171,33 @@ export function StudentChatPage() {
         </div>
       </Panel>
 
-      {/* NEW CHAT */}
       {showNewChatForm && (
         <Panel>
           <h2 className="font-bold mb-4">Start Chat</h2>
 
           <form onSubmit={handleCreate} className="space-y-4">
-            {/* CHAT TYPE */}
             <Field label="Chat Type">
+              {/* ANONYMOUS OPTION */}
+              {(chatType === "Support" || chatType === "Counseling") && (
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isAnonymous}
+                    onChange={(e) => setIsAnonymous(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">
+                      Chat anonymously
+                    </p>
+
+                    <p className="text-xs text-slate-500">
+                      Your identity will not be shown to the administrator.
+                    </p>
+                  </div>
+                </label>
+              )}
               <select
                 className={inputClass}
                 value={chatType}
@@ -261,6 +269,7 @@ export function StudentChatPage() {
               <ChatWindow
                 conversationId={selectedConversationId}
                 conversationStatus={currentConversation?.status}
+                isAnonymous={currentConversation?.isAnonymous}
               />
             </div>
           ) : (

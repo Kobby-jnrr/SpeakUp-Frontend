@@ -51,7 +51,9 @@ export function ChatConversationList({
     const report = c.reportCode ? c.reportCode : c.chatType;
 
     const name = isAdmin
-      ? c.studentName || "Unknown Student"
+      ? c.isAnonymous
+        ? "Anonymous User"
+        : c.studentName || "Unknown Student"
       : c.assignedAdminName || "Unassigned Admin";
 
     return `${name} (${report})`;
@@ -81,8 +83,14 @@ export function ChatConversationList({
               : "border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <div className="font-semibold text-sm truncate">
+          <div className="font-semibold text-sm truncate flex items-center gap-2">
             {formatTitle(conv)}
+
+            {adminMode && conv.isAnonymous && (
+              <span className="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">
+                Anonymous
+              </span>
+            )}
           </div>
 
           <div className="flex justify-between items-center">

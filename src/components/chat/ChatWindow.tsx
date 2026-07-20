@@ -8,11 +8,13 @@ import type { ChatMessage } from "../../types";
 interface ChatWindowProps {
   conversationId: number;
   conversationStatus?: string;
+  isAnonymous?: boolean;
 }
 
 export function ChatWindow({
   conversationId,
   conversationStatus,
+  isAnonymous = false,
 }: ChatWindowProps) {
   const { currentUser, addToast } = useApp();
 
@@ -155,7 +157,7 @@ export function ChatWindow({
           </p>
         ) : (
           messages.map((msg) => {
-            const isMe = msg.sender?.id === Number(currentUser?.id);
+            const isMe = msg.sender?.isCurrentUser;
 
             return (
               <div
@@ -164,9 +166,10 @@ export function ChatWindow({
               >
                 <div className="flex flex-col max-w-xs md:max-w-md">
                   {/* Sender name (only receiver sees it) */}
+                  {/* Sender name (only receiver sees it) */}
                   {!isMe && msg.sender && (
                     <p className="text-xs text-slate-500 font-semibold mb-1">
-                      {msg.sender.firstName} {msg.sender.lastName}
+                      {msg.sender.name}
                     </p>
                   )}
 

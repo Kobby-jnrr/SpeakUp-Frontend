@@ -129,7 +129,11 @@ export function AdminChatPage() {
 
     const report = c.reportCode ? c.reportCode : c.chatType;
 
-    return `${c.studentName || "Unknown"} (${report})`;
+    const studentName = c.isAnonymous
+      ? "Anonymous User"
+      : c.studentName || "Unknown";
+
+    return `${studentName} (${report})`;
   };
 
   const currentConversation = filteredConversations.find(
@@ -266,6 +270,7 @@ export function AdminChatPage() {
               <ChatWindow
                 conversationId={selectedConversationId}
                 conversationStatus={currentConversation?.status}
+                isAnonymous={currentConversation?.isAnonymous}
               />
             </div>
           ) : (

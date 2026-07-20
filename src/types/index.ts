@@ -99,15 +99,16 @@ export interface Conversation {
 export interface ChatMessage {
   id: number;
   chatConversationId: number;
-  senderId: number;
   message: string;
   sentAt: string;
   isRead: boolean;
-  sender?: {
+
+  sender: {
     id: number;
-    firstName: string;
-    lastName: string;
-  } | null;
+    name: string;
+    role: string;
+    isCurrentUser: boolean;
+  };
 }
 
 /** Matches HomePageContentDto from the backend */
