@@ -30,6 +30,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +47,15 @@ export default function LoginPage() {
         navigate("/student/home");
       }
     } catch (err: any) {
+      const response = err.response?.data;
+
+      if (response?.code === "EMAIL_NOT_VERIFIED") {
+        setShowVerifyModal(true);
+        return;
+      }
+
       setError(
-        err.response?.data || "Invalid email or password. Please try again.",
+        typeof response === "string" ? response : "Invalid email or password.",
       );
     } finally {
       setLoading(false);
@@ -325,6 +333,7 @@ export default function LoginPage() {
                 <div className="text-right">
                   <button
                     type="button"
+                    onClick={() => navigate("/forgot-password")}
                     className="
                     text-sm
                     text-blue-600
@@ -375,6 +384,115 @@ export default function LoginPage() {
           </div>
         </div>
       </motion.div>
+      {showVerifyModal && (
+        <div
+          className="
+    fixed
+    inset-0
+    bg-black/40
+    flex
+    items-center
+    justify-center
+    z-50
+    px-4
+    "
+        >
+          <div
+            className="
+      bg-white
+      rounded-2xl
+      shadow-xl
+      max-w-md
+      w-full
+      p-8
+      text-center
+      "
+          >
+            <h2
+              className="
+        text-xl
+        font-bold
+        text-slate-900
+        "
+            >
+              Email Not Verified
+            </h2>
+
+            <p
+              className="
+        mt-4
+        text-slate-600
+        "
+            >
+              Your account exists, but your email address has not been verified
+              yet.
+            </p>
+
+            <p
+              className="
+        mt-2
+        text-sm
+        font-semibold
+        text-blue-600
+        "
+            >
+              {form.email}
+            </p>
+
+            <p
+              className="
+        mt-4
+        text-sm
+        text-slate-500
+        "
+            >
+              Would you like to verify your email now?
+            </p>
+
+            <div
+              className="
+        mt-6
+        flex
+        gap-3
+        "
+            >
+              <button
+                className="
+          flex-1
+          rounded-xl
+          border
+          py-3
+          text-slate-600
+          hover:bg-slate-100
+          "
+                onClick={() => setShowVerifyModal(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="
+          flex-1
+          rounded-xl
+          bg-blue-600
+          py-3
+          text-white
+          hover:bg-blue-700
+          "
+                onClick={() =>
+                  navigate("/verify-email", {
+                    state: {
+                      email: form.email,
+                    },
+                  })
+                }
+              >
+                Verify Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

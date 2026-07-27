@@ -24,4 +24,20 @@ export const authService = {
   resendVerificationCode: (email: string) => {
     return api.post(`/Auth/resend-verification-code?email=${email}`);
   },
+
+  // SEND PASSWORD RESET LINK
+  forgotPassword: (email: string) => {
+    return api.post("/Auth/forgot-password", {
+      email,
+    });
+  },
+
+  // RESET PASSWORD USING TOKEN
+  resetPassword: (data: {
+    email: string;
+    token: string;
+    newPassword: string;
+  }) => {
+    return api.post("/Auth/reset-password", data);
+  },
 };
