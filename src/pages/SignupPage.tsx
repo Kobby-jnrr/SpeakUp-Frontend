@@ -72,10 +72,14 @@ export default function SignupPage() {
         password: formData.password,
       });
 
-      setSuccess("Account created successfully. Redirecting to login...");
+      setSuccess("Account created successfully. Redirecting...");
 
       setTimeout(() => {
-        navigate("/login");
+        navigate("/verify-email", {
+          state: {
+            email: formData.email,
+          },
+        });
       }, 1200);
     } catch (err: any) {
       setError(err.response?.data || "Registration failed. Please try again.");

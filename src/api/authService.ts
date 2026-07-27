@@ -16,4 +16,12 @@ export const authService = {
   }) => {
     return api.post("/Auth/register", data);
   },
+
+  verifyEmail: (data: { email: string; code: string }) => {
+    return api.post("/Auth/verify-email", data);
+  },
+
+  resendVerificationCode: (email: string) => {
+    return api.post(`/Auth/resend-verification-code?email=${email}`);
+  },
 };

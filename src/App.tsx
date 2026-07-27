@@ -41,6 +41,7 @@ import {
 import { HomePage, NotFoundPage } from "./pages/PublicPages";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 // ================= SHELLS =================
 function StudentShell({ children }: { children: ReactNode }) {
@@ -68,6 +69,7 @@ export default function App() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<SignupPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
 
         {/* ================= STUDENT ================= */}
         <Route

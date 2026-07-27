@@ -6,6 +6,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.8",
     "@vitejs/plugin-react": "latest",
     "axios": "^1.17.0",
     "framer-motion": "^12.42.2",
