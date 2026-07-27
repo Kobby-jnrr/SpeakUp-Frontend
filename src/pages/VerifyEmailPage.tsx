@@ -12,6 +12,8 @@ export default function VerifyEmailPage() {
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
 
   const verifyEmail = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +57,32 @@ export default function VerifyEmailPage() {
       setMessage(backendMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resendCode = async () => {
+    setMessage("");
+
+    if (!email) {
+      setMessage("Email missing.");
+      return;
+    }
+
+    try {
+      setResending(true);
+      setResendMessage("");
+
+      await authService.resendVerificationCode(email);
+
+      setResendMessage(
+        "A new verification code has been sent. Please check your inbox or spam folder.",
+      );
+    } catch (error: any) {
+      setResendMessage(
+        error.response?.data || "Failed to resend verification code.",
+      );
+    } finally {
+      setResending(false);
     }
   };
 
@@ -151,6 +179,23 @@ export default function VerifyEmailPage() {
               </div>
             )}
 
+            {resendMessage && (
+              <div
+                className="
+                mt-3
+                rounded-lg
+                border
+                border-green-200
+                bg-green-50
+                p-3
+                text-sm
+                text-green-700
+                "
+              >
+                {resendMessage}
+              </div>
+            )}
+
             <form onSubmit={verifyEmail} className="mt-6 space-y-4">
               <input
                 value={code}
@@ -194,6 +239,25 @@ export default function VerifyEmailPage() {
                 "
               >
                 {loading ? "Checking code..." : "Verify Email"}
+              </button>
+              <button
+                type="button"
+                onClick={resendCode}
+                disabled={resending}
+                className="
+                w-full
+                mt-3
+                border
+                border-blue-600
+                text-blue-600
+                py-3
+                rounded-xl
+                font-semibold
+                hover:bg-blue-50
+                disabled:opacity-50
+                "
+              >
+                {resending ? "Sending new code..." : "Resend Verification Code"}
               </button>
             </form>
           </>

@@ -29,6 +29,8 @@ export default function SignupPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [existingEmail, setExistingEmail] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -82,7 +84,15 @@ export default function SignupPage() {
         });
       }, 1200);
     } catch (err: any) {
-      setError(err.response?.data || "Registration failed. Please try again.");
+      const message = err.response?.data;
+
+      if (message === "Account exists but email is not verified.") {
+        setExistingEmail(formData.email);
+        setShowVerifyModal(true);
+
+        return;
+      }
+      setError(message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -100,8 +110,6 @@ export default function SignupPage() {
       py-10
     "
     >
-      {/* BACK */}
-
       <Link
         to="/"
         className="
@@ -424,6 +432,129 @@ export default function SignupPage() {
           </div>
         </div>
       </motion.div>
+      {showVerifyModal && (
+        <div
+          className="
+          fixed
+          inset-0
+          bg-black/40
+          flex
+          items-center
+          justify-center
+          z-50
+          px-4
+          "
+        >
+          <div
+            className="
+            bg-white
+            rounded-2xl
+            shadow-xl
+            max-w-md
+            w-full
+            p-8
+            text-center
+            "
+          >
+            <h2
+              className="
+              text-xl
+              font-bold
+              text-slate-900
+              "
+            >
+              Account Already Exists
+            </h2>
+
+            <p
+              className="
+              mt-4
+              text-slate-600
+              "
+            >
+              An account with this email already exists, but the email has not
+              been verified yet.
+            </p>
+
+            <p
+              className="
+              mt-2
+              text-sm
+              text-blue-600
+              font-semibold
+              "
+            >
+              {existingEmail}
+            </p>
+
+            <p
+              className="
+              mt-4
+              text-sm
+              text-slate-500
+              "
+            >
+              Would you like us to send a new verification code and continue
+              verification?
+            </p>
+
+            <div
+              className="
+                mt-6
+                flex
+                gap-3
+                "
+            >
+              <button
+                className="
+                flex-1
+                border
+                rounded-xl
+                py-3
+                text-slate-600
+                hover:bg-slate-100
+                "
+                onClick={() => {
+                  setShowVerifyModal(false);
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="
+                flex-1
+                bg-blue-600
+                text-white
+                rounded-xl
+                py-3
+                hover:bg-blue-700
+                "
+                onClick={async () => {
+                  try {
+                    await authService.resendVerificationCode(existingEmail);
+
+                    navigate("/verify-email", {
+                      state: {
+                        email: existingEmail,
+                      },
+                    });
+                  } catch (error: any) {
+                    setError(
+                      error.response?.data ||
+                        "Could not resend verification code.",
+                    );
+
+                    setShowVerifyModal(false);
+                  }
+                }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
