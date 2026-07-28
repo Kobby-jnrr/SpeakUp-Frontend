@@ -2,17 +2,9 @@ import { Field, inputClass } from "../../components/ui/Form";
 import { Panel } from "../../components/ui/Cards";
 import { Button } from "../../components/ui/Button";
 import { useApp } from "../../context/AppContext";
-import { useState } from "react";
-import { Link } from "react-router-dom";
 
 export function StudentSettingsPage() {
-  const { currentUser, addToast, theme, setTheme } = useApp();
-
-  const [notifications, setNotifications] = useState({
-    messages: true,
-    resources: true,
-    announcements: true,
-  });
+  const { currentUser, addToast } = useApp();
 
   const fullName = [currentUser?.firstName, currentUser?.lastName]
     .filter(Boolean)
@@ -23,8 +15,9 @@ export function StudentSettingsPage() {
       {/* HEADER */}
       <Panel>
         <h1 className="text-2xl font-bold">Student Settings</h1>
+
         <p className="text-sm text-slate-600">
-          Manage your profile, privacy, and notifications
+          View your account information and available SpeakUp features.
         </p>
       </Panel>
 
@@ -34,11 +27,15 @@ export function StudentSettingsPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Full name">
-            <input className={inputClass} value={fullName} readOnly />
+            <input className={inputClass} value={fullName || "—"} readOnly />
           </Field>
 
           <Field label="Email">
-            <input className={inputClass} value={currentUser?.email} readOnly />
+            <input
+              className={inputClass}
+              value={currentUser?.email || "—"}
+              readOnly
+            />
           </Field>
 
           <Field label="Gender">
@@ -65,93 +62,99 @@ export function StudentSettingsPage() {
             />
           </Field>
 
-          <Field label="Role">
-            <input className={inputClass} value={currentUser?.role} readOnly />
+          <Field label="Account type">
+            <input
+              className={inputClass}
+              value={currentUser?.role || "Student"}
+              readOnly
+            />
           </Field>
         </div>
       </Panel>
 
-      {/* SECURITY */}
+      {/* AVAILABLE FEATURES */}
       <Panel>
-        <h2 className="mb-4 text-base font-semibold">Security</h2>
-
-        <p className="mb-4 text-sm text-slate-600">
-          Keep your account secure by updating your password regularly. If you
-          forget your password, you can request a reset link sent directly to
-          your email.
-        </p>
-
-        <Link to="/forgot-password">
-          <Button variant="secondary">Reset Password</Button>
-        </Link>
-      </Panel>
-
-      {/* NOTIFICATIONS */}
-      <Panel>
-        <h2 className="mb-4 text-base font-semibold">
-          Notification Preferences
-        </h2>
+        <h2 className="mb-4 text-base font-semibold">SpeakUp Features</h2>
 
         <div className="space-y-3">
-          <label className="flex items-center gap-3 rounded-md border p-3 text-sm">
-            <input
-              type="checkbox"
-              checked={notifications.messages}
-              onChange={(e) =>
-                setNotifications({
-                  ...notifications,
-                  messages: e.target.checked,
-                })
-              }
-            />
-            Secure messages from admins
-          </label>
+          <div className="rounded-md border p-3 text-sm">
+            <p className="font-medium">Incident Reporting</p>
 
-          <label className="flex items-center gap-3 rounded-md border p-3 text-sm">
-            <input
-              type="checkbox"
-              checked={notifications.resources}
-              onChange={(e) =>
-                setNotifications({
-                  ...notifications,
-                  resources: e.target.checked,
-                })
-              }
-            />
-            New resource uploads
-          </label>
+            <p className="text-slate-500">
+              Submit complaints and track the progress of your reports.
+            </p>
 
-          <label className="flex items-center gap-3 rounded-md border p-3 text-sm">
-            <input
-              type="checkbox"
-              checked={notifications.announcements}
-              onChange={(e) =>
-                setNotifications({
-                  ...notifications,
-                  announcements: e.target.checked,
-                })
-              }
-            />
-            General announcements
-          </label>
+            <span className="inline-block mt-2 rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
+              Available
+            </span>
+          </div>
+
+          <div className="rounded-md border p-3 text-sm">
+            <p className="font-medium">Secure Conversations</p>
+
+            <p className="text-slate-500">
+              Communicate privately with assigned support administrators.
+            </p>
+
+            <span className="inline-block mt-2 rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
+              Available
+            </span>
+          </div>
+
+          <div className="rounded-md border p-3 text-sm">
+            <p className="font-medium">Support Resources</p>
+
+            <p className="text-slate-500">
+              Access educational and safety resources published by
+              administrators.
+            </p>
+
+            <span className="inline-block mt-2 rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
+              Available
+            </span>
+          </div>
         </div>
-
-        <Button
-          className="mt-4"
-          onClick={() => addToast({ title: "Settings saved", tone: "success" })}
-        >
-          Save preferences
-        </Button>
       </Panel>
 
       {/* PRIVACY */}
       <Panel>
-        <h2 className="mb-4 text-base font-semibold">Privacy</h2>
+        <h2 className="mb-4 text-base font-semibold">
+          Privacy & Confidentiality
+        </h2>
 
-        <label className="flex items-center gap-3 text-sm">
-          <input type="checkbox" defaultChecked />
-          Allow admins to contact me regarding reports
-        </label>
+        <div className="rounded-md border p-4 text-sm">
+          <p className="font-medium">Report confidentiality</p>
+
+          <p className="mt-1 text-slate-600">
+            Your submitted reports are handled according to the confidentiality
+            options selected during submission.
+          </p>
+
+          <span className="inline-block mt-3 rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700">
+            Protected
+          </span>
+        </div>
+      </Panel>
+
+      {/* ACCOUNT STATUS */}
+      <Panel>
+        <h2 className="mb-4 text-base font-semibold">Account Status</h2>
+
+        <p className="text-sm text-slate-600 mb-4">
+          Your account is authenticated and protected using SpeakUp's secure
+          role-based access system.
+        </p>
+
+        <Button
+          onClick={() =>
+            addToast({
+              title: "Your account is active",
+              tone: "success",
+            })
+          }
+        >
+          Check Account Status
+        </Button>
       </Panel>
     </div>
   );

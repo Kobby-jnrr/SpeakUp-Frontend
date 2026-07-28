@@ -1,24 +1,18 @@
 import { Panel } from "../../components/ui/Cards";
 import { Button } from "../../components/ui/Button";
 import { useApp } from "../../context/AppContext";
-import { useState } from "react";
 
 export function AdminSettingsPage() {
   const { currentUser, addToast } = useApp();
-
-  const [systemSettings, setSystemSettings] = useState({
-    allowRegistrations: true,
-    allowAnonymousReports: true,
-    resourceAutoPublish: false,
-  });
 
   return (
     <div className="space-y-6">
       {/* HEADER */}
       <Panel>
         <h1 className="text-2xl font-bold">Admin Settings</h1>
+
         <p className="text-sm text-slate-600">
-          Manage system behavior and administrative controls
+          View your account information and current system capabilities.
         </p>
       </Panel>
 
@@ -29,6 +23,7 @@ export function AdminSettingsPage() {
         <div className="grid gap-4 md:grid-cols-2 text-sm">
           <div>
             <p className="text-slate-500">Name</p>
+
             <p className="font-semibold">
               {currentUser?.firstName} {currentUser?.lastName}
             </p>
@@ -36,88 +31,119 @@ export function AdminSettingsPage() {
 
           <div>
             <p className="text-slate-500">Role</p>
+
             <p className="font-semibold">{currentUser?.role}</p>
           </div>
 
           <div>
             <p className="text-slate-500">Email</p>
+
             <p className="font-semibold">{currentUser?.email}</p>
           </div>
         </div>
       </Panel>
 
-      {/* SYSTEM CONTROLS */}
+      {/* SYSTEM FEATURES */}
       <Panel>
-        <h2 className="mb-4 text-base font-semibold">System Controls</h2>
+        <h2 className="mb-4 text-base font-semibold">System Features</h2>
 
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 rounded-md border p-3 text-sm">
-            <input
-              type="checkbox"
-              checked={systemSettings.allowRegistrations}
-              onChange={(e) =>
-                setSystemSettings({
-                  ...systemSettings,
-                  allowRegistrations: e.target.checked,
-                })
-              }
-            />
-            Allow new user registrations
-          </label>
+        <div className="space-y-3 text-sm">
+          <div className="flex justify-between items-center rounded-md border p-3">
+            <div>
+              <p className="font-medium">Report Management</p>
 
-          <label className="flex items-center gap-3 rounded-md border p-3 text-sm">
-            <input
-              type="checkbox"
-              checked={systemSettings.allowAnonymousReports}
-              onChange={(e) =>
-                setSystemSettings({
-                  ...systemSettings,
-                  allowAnonymousReports: e.target.checked,
-                })
-              }
-            />
-            Allow anonymous reports
-          </label>
+              <p className="text-slate-500">
+                Admins can review, claim, update and resolve reports.
+              </p>
+            </div>
 
-          <label className="flex items-center gap-3 rounded-md border p-3 text-sm">
-            <input
-              type="checkbox"
-              checked={systemSettings.resourceAutoPublish}
-              onChange={(e) =>
-                setSystemSettings({
-                  ...systemSettings,
-                  resourceAutoPublish: e.target.checked,
-                })
-              }
-            />
-            Auto-publish resources (skip approval)
-          </label>
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
+              Active
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center rounded-md border p-3">
+            <div>
+              <p className="font-medium">Chat Support</p>
+
+              <p className="text-slate-500">
+                Students and administrators can communicate through
+                conversations.
+              </p>
+            </div>
+
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
+              Active
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center rounded-md border p-3">
+            <div>
+              <p className="font-medium">Resource Management</p>
+
+              <p className="text-slate-500">
+                Administrators can create, update and publish support resources.
+              </p>
+            </div>
+
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
+              Active
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center rounded-md border p-3">
+            <div>
+              <p className="font-medium">Audit Tracking</p>
+
+              <p className="text-slate-500">
+                Administrative actions are recorded for accountability.
+              </p>
+            </div>
+
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
+              Active
+            </span>
+          </div>
         </div>
+      </Panel>
+
+      {/* SECURITY */}
+      <Panel>
+        <h2 className="mb-4 text-base font-semibold">Security</h2>
+
+        <div className="rounded-md border p-4 text-sm">
+          <p className="font-medium">Authentication System</p>
+
+          <p className="text-slate-500 mt-1">
+            SpeakUp uses secure JWT authentication and role-based access
+            control.
+          </p>
+
+          <span className="inline-block mt-3 rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
+            Enabled
+          </span>
+        </div>
+      </Panel>
+
+      {/* FUTURE SETTINGS */}
+      <Panel>
+        <h2 className="mb-4 text-base font-semibold">Future Configuration</h2>
+
+        <p className="text-sm text-slate-600 mb-4">
+          Additional system configuration options such as registration control,
+          email settings and platform preferences can be added here later.
+        </p>
 
         <Button
-          className="mt-4"
           onClick={() =>
             addToast({
-              title: "System settings updated",
+              title: "No pending configuration changes",
               tone: "success",
             })
           }
         >
-          Save settings
+          Check Settings
         </Button>
-      </Panel>
-
-      {/* DANGER ZONE */}
-      <Panel>
-        <h2 className="mb-4 text-base font-semibold text-red-600">
-          Danger Zone
-        </h2>
-
-        <p className="text-sm text-slate-600 mb-3">
-          These actions are irreversible. Proceed with caution.
-        </p>
-
-        <Button variant="danger">Reset System Data</Button>
       </Panel>
     </div>
   );
