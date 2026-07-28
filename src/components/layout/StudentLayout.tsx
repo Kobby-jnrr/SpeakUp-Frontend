@@ -1,7 +1,6 @@
 import {
   Activity,
   AlertTriangle,
-  Bell,
   BookOpen,
   ChevronLeft,
   ChevronRight,
@@ -13,7 +12,6 @@ import {
   Lock,
   LogOut,
   Mail,
-  Megaphone,
   MessageSquare,
   Menu,
   Search,
@@ -24,6 +22,7 @@ import { useState, type ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { Button } from "../ui/Button";
+import { NotificationDropdown } from "../ui/NotificationDropdown";
 
 const mainLinks = [
   { to: "/student/home", label: "Home", icon: Home },
@@ -49,7 +48,6 @@ export function StudentLayout({ children }: { children: ReactNode }) {
   const { currentUser, logout } = useApp();
   const navigate = useNavigate();
 
-  const unread = 0;
   const initials =
     [currentUser?.firstName?.[0] ?? "", currentUser?.lastName?.[0] ?? ""]
       .join("")
@@ -261,16 +259,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
               />
             </label>
             <div className="flex items-center gap-5">
-              <button
-                className="relative rounded-full border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"
-                aria-label="Notifications"
-                onClick={() => navigate("/student/notifications")}
-              >
-                <Bell className="h-5 w-5" />
-                {unread > 0 ? (
-                  <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500" />
-                ) : null}
-              </button>
+              <NotificationDropdown />
               <button
                 className="flex items-center gap-3"
                 onClick={() => navigate("/student/settings")}

@@ -3,6 +3,7 @@ import { Panel } from "../../components/ui/Cards";
 import { Button } from "../../components/ui/Button";
 import { useApp } from "../../context/AppContext";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export function StudentSettingsPage() {
   const { currentUser, addToast, theme, setTheme } = useApp();
@@ -70,34 +71,19 @@ export function StudentSettingsPage() {
         </div>
       </Panel>
 
-      {/* APPEARANCE */}
-      <Panel>
-        <h2 className="mb-4 font-semibold">Appearance</h2>
-
-        <div className="flex items-center justify-between rounded-md border p-4">
-          <div>
-            <p className="font-medium">Theme</p>
-            <p className="text-xs text-slate-500">
-              Switch between light and dark mode
-            </p>
-          </div>
-
-          <Button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-            {theme === "dark" ? "Dark Mode" : "Light Mode"}
-          </Button>
-        </div>
-      </Panel>
-
       {/* SECURITY */}
       <Panel>
         <h2 className="mb-4 text-base font-semibold">Security</h2>
 
-        <p className="text-sm text-slate-600 mb-3">
-          Password management is handled by administrators. If you need a reset,
-          contact support.
+        <p className="mb-4 text-sm text-slate-600">
+          Keep your account secure by updating your password regularly. If you
+          forget your password, you can request a reset link sent directly to
+          your email.
         </p>
 
-        <Button variant="secondary">Request Password Reset</Button>
+        <Link to="/forgot-password">
+          <Button variant="secondary">Reset Password</Button>
+        </Link>
       </Panel>
 
       {/* NOTIFICATIONS */}

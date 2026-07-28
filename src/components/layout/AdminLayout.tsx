@@ -12,12 +12,14 @@ import {
   ChevronRight,
   UserPlus,
   User,
+  Search,
   X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { Button } from "../ui/Button";
+import { NotificationDropdown } from "../ui/NotificationDropdown";
 
 export function AdminLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -199,7 +201,109 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       >
         <div className="hidden lg:block">{sidebar}</div>
 
-        <main className="min-w-0 p-4 sm:p-6 lg:p-8">{children}</main>
+        <div className="min-w-0">
+          {/* Desktop Header */}
+          <div
+            className="
+    hidden
+    border-b
+    border-slate-200
+    bg-white
+    px-6
+    py-4
+    lg:flex
+    lg:items-center
+    lg:justify-between
+    "
+          >
+            {/* Search */}
+            <label
+              className="
+      flex
+      w-full
+      max-w-md
+      items-center
+      gap-3
+      rounded-full
+      border
+      border-slate-200
+      bg-white
+      px-4
+      py-2.5
+      text-sm
+      text-slate-500
+      "
+            >
+              <Search className="h-4 w-4" />
+
+              <input
+                className="
+        w-full
+        bg-transparent
+        outline-none
+        "
+                placeholder="Search reports, users, resources..."
+              />
+            </label>
+
+            {/* Right side */}
+            <div className="flex items-center gap-5">
+              <NotificationDropdown />
+
+              <button
+                onClick={() => navigate("/admin/settings")}
+                className="
+        flex
+        items-center
+        gap-3
+        "
+              >
+                <span
+                  className="
+          flex
+          h-10
+          w-10
+          items-center
+          justify-center
+          rounded-full
+          bg-blue-100
+          text-sm
+          font-bold
+          text-blue-700
+          "
+                >
+                  {currentUser?.firstName?.[0]}
+                  {currentUser?.lastName?.[0]}
+                </span>
+
+                <span className="text-left">
+                  <span
+                    className="
+            block
+            text-sm
+            font-bold
+            text-slate-950
+            "
+                  >
+                    {currentUser?.firstName} {currentUser?.lastName}
+                  </span>
+
+                  <span
+                    className="
+            block
+            text-xs
+            text-slate-500
+            "
+                  >
+                    {currentUser?.role}
+                  </span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <main className="min-w-0 p-4 sm:p-6 lg:p-8">{children}</main>
+        </div>
       </div>
     </div>
   );
