@@ -53,7 +53,7 @@ export function HomePage() {
             "
           >
             <img
-              src="/images/speaks2.png"
+              src="/images/speaks3.png"
               alt="SpeakUp Logo"
               className="
                 h-10
@@ -603,7 +603,7 @@ export function HomePage() {
   "
             >
               <img
-                src="/images/speaks2.png"
+                src="/images/speaks3.png"
                 alt="SpeakUp Logo"
                 className="
       h-8
@@ -981,7 +981,7 @@ function MotivationBanner({
             className="p-8 md:p-12"
           >
             <img
-              src="/images/speaks2.png"
+              src="/images/speaks3.png"
               alt="SpeakUp Logo"
               className="
               h-12

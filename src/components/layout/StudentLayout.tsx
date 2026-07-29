@@ -118,7 +118,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-white">
             <img
-              src="/images/speaks2.png"
+              src="/images/speaks3.png"
               alt="SpeakUp Logo"
               className="h-9 w-9 object-contain"
             />
@@ -219,7 +219,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <img
-              src="/images/speaks2.png"
+              src="/images/speaks3.png"
               alt="SpeakUp Logo"
               className="h-7 w-7 object-contain"
             />

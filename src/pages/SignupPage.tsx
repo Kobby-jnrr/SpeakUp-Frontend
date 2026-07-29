@@ -181,7 +181,7 @@ export default function SignupPage() {
                 "
                 >
                   <img
-                    src="/images/speaks2.png"
+                    src="/images/speaks3.png"
                     alt="SpeakUp Logo"
                     className="h-12 w-12 object-contain"
                   />
