@@ -17,6 +17,8 @@ import {
   AdminHomePageContentPage,
   CreateAdminPage,
   Users,
+  AdminSearchPage,
+  AdminSignupPage,
 } from "./pages/admin";
 
 // ================= STUDENT PAGES =================
@@ -34,6 +36,7 @@ import {
   StudentContactPage,
   StudentSettingsPage,
   StudentChatPage,
+  StudentSearchPage,
   EmergencyPage,
 } from "./pages/student";
 
@@ -74,6 +77,7 @@ export default function App() {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/admin-signup" element={<AdminSignupPage />} />
 
         {/* ================= STUDENT ================= */}
         <Route
@@ -199,6 +203,15 @@ export default function App() {
         />
 
         <Route
+          path="/student/search"
+          element={
+            <StudentShell>
+              <StudentSearchPage />
+            </StudentShell>
+          }
+        />
+
+        <Route
           path="/student/chat"
           element={
             <StudentShell>
@@ -263,6 +276,15 @@ export default function App() {
           element={
             <JuniorAdminShell>
               <AdminSettingsPage />
+            </JuniorAdminShell>
+          }
+        />
+
+        <Route
+          path="/admin/search"
+          element={
+            <JuniorAdminShell>
+              <AdminSearchPage />
             </JuniorAdminShell>
           }
         />

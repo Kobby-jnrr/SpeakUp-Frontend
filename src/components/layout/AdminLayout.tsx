@@ -24,6 +24,7 @@ import { NotificationDropdown } from "../ui/NotificationDropdown";
 export function AdminLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   const { currentUser, logout } = useApp();
   const navigate = useNavigate();
@@ -237,6 +238,16 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               <Search className="h-4 w-4" />
 
               <input
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    const trimmedValue = searchValue.trim();
+                    navigate(
+                      `/admin/search${trimmedValue ? `?q=${encodeURIComponent(trimmedValue)}` : ""}`,
+                    );
+                  }
+                }}
                 className="
         w-full
         bg-transparent

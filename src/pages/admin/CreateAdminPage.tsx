@@ -1,65 +1,61 @@
 import { useState } from "react";
+
 import { useApp } from "../../context/AppContext";
+
 import { Panel } from "../../components/ui/Cards";
+
 import { Button } from "../../components/ui/Button";
+
 import { adminService } from "../../api/adminService";
 
-type AdminType = "Junior" | "Super";
+type AdminType = "JuniorAdmin" | "SuperAdmin";
 
 export default function CreateAdminPage() {
   const { addToast } = useApp();
 
-  const [adminType, setAdminType] = useState<AdminType>("Junior");
+  const [role, setRole] = useState<AdminType>("JuniorAdmin");
 
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phoneNumber: "",
-    password: "",
-  });
+  const [email, setEmail] = useState("");
 
   const [loading, setLoading] = useState(false);
 
-  const update = (key: keyof typeof form, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
   const submit = async () => {
+    if (!email) {
+      addToast({
+        title: "Error",
+        message: "Email is required",
+        tone: "error",
+      });
+
+      return;
+    }
+
     setLoading(true);
 
     try {
-      if (adminType === "Super") {
-        await adminService.createSuperAdmin(form);
-      } else {
-        await adminService.createJuniorAdmin(form);
-      }
+      await adminService.createAdminInvitation({
+        email,
+        role,
+      });
 
       addToast({
-        title: "Success",
-        message:
-          adminType === "Super"
-            ? "Super admin created successfully"
-            : "Junior admin created successfully",
+        title: "Invitation Sent",
+
+        message: `Admin signup invitation sent to ${email}`,
+
         tone: "success",
       });
 
-      // reset form
-      setForm({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phoneNumber: "",
-        password: "",
-      });
+      setEmail("");
     } catch (err: any) {
       addToast({
         title: "Error",
+
         message:
           err?.response?.data?.message ||
           err?.response?.data ||
-          err?.message ||
-          "Error creating admin",
+          "Failed to create invitation",
+
         tone: "error",
       });
     } finally {
@@ -68,91 +64,86 @@ export default function CreateAdminPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      {/* HEADER */}
+    <div className="max-w-xl mx-auto space-y-6">
       <Panel>
-        <h1 className="text-2xl font-bold">Create {adminType} Admin</h1>
-        <p className="text-sm text-slate-600 mt-1">
-          Add a new admin account to manage reports and system operations.
+        <h1 className="text-2xl font-bold">Create Admin Account</h1>
+
+        <p className="mt-1 text-sm text-slate-600">
+          Generate a secure signup invitation. The invited person will complete
+          their own account setup.
         </p>
-
-        {/* TOGGLE */}
-        <div className="mt-4 flex gap-2">
-          <button
-            onClick={() => setAdminType("Junior")}
-            className={`px-4 py-2 rounded text-sm font-semibold border transition ${
-              adminType === "Junior"
-                ? "bg-institution-600 text-white border-institution-600"
-                : "bg-white text-slate-700 border-slate-200"
-            }`}
-          >
-            Junior Admin
-          </button>
-
-          <button
-            onClick={() => setAdminType("Super")}
-            className={`px-4 py-2 rounded text-sm font-semibold border transition ${
-              adminType === "Super"
-                ? "bg-red-600 text-white border-red-600"
-                : "bg-white text-slate-700 border-slate-200"
-            }`}
-          >
-            Super Admin
-          </button>
-        </div>
       </Panel>
 
-      {/* FORM */}
       <Panel>
-        <div className="grid gap-4">
-          {/* NAME */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <input
-              placeholder="First Name"
-              value={form.firstName}
-              onChange={(e) => update("firstName", e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institution-600"
-            />
+        <div className="space-y-5">
+          {/* ROLE SELECT */}
 
-            <input
-              placeholder="Last Name"
-              value={form.lastName}
-              onChange={(e) => update("lastName", e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institution-600"
-            />
+          <div>
+            <label className="text-sm font-semibold">Account Type</label>
+
+            <div className="mt-2 flex gap-3">
+              <button
+                onClick={() => setRole("JuniorAdmin")}
+                className={`
+                rounded-md border px-4 py-2 text-sm font-semibold
+
+                ${
+                  role === "JuniorAdmin"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-slate-700"
+                }
+
+                `}
+              >
+                Junior Admin
+              </button>
+
+              <button
+                onClick={() => setRole("SuperAdmin")}
+                className={`
+                rounded-md border px-4 py-2 text-sm font-semibold
+
+                ${
+                  role === "SuperAdmin"
+                    ? "bg-red-600 text-white border-red-600"
+                    : "bg-white text-slate-700"
+                }
+
+                `}
+              >
+                Super Admin
+              </button>
+            </div>
           </div>
 
           {/* EMAIL */}
-          <input
-            placeholder="Email Address"
-            value={form.email}
-            onChange={(e) => update("email", e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institution-600"
-          />
 
-          {/* PHONE */}
-          <input
-            placeholder="Phone Number"
-            value={form.phoneNumber}
-            onChange={(e) => update("phoneNumber", e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institution-600"
-          />
+          <div>
+            <label className="text-sm font-semibold">Email Address</label>
 
-          {/* PASSWORD */}
-          <input
-            placeholder="Password"
-            type="password"
-            value={form.password}
-            onChange={(e) => update("password", e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-institution-600"
-          />
-
-          {/* BUTTON */}
-          <div className="pt-2">
-            <Button onClick={submit} disabled={loading} className="w-full">
-              {loading ? "Creating..." : `Create ${adminType} Admin`}
-            </Button>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="person@example.com"
+              className="
+              mt-2
+              w-full
+              rounded-md
+              border
+              border-slate-300
+              px-3
+              py-2
+              text-sm
+              outline-none
+              focus:ring-2
+              focus:ring-blue-600
+              "
+            />
           </div>
+
+          <Button className="w-full" onClick={submit} disabled={loading}>
+            {loading ? "Sending Invitation..." : "Generate Signup Link"}
+          </Button>
         </div>
       </Panel>
     </div>

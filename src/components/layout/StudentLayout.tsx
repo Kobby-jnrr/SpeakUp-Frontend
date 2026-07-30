@@ -45,6 +45,7 @@ const moreLinks = [
 export function StudentLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const { currentUser, logout } = useApp();
   const navigate = useNavigate();
 
@@ -254,6 +255,16 @@ export function StudentLayout({ children }: { children: ReactNode }) {
             <label className="flex w-full max-w-md items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-500">
               <Search className="h-4 w-4" aria-hidden="true" />
               <input
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    const trimmedValue = searchValue.trim();
+                    navigate(
+                      `/student/search${trimmedValue ? `?q=${encodeURIComponent(trimmedValue)}` : ""}`,
+                    );
+                  }
+                }}
                 className="w-full bg-transparent outline-none"
                 placeholder="Search for resources, help articles, etc."
               />

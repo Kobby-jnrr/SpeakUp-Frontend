@@ -1,21 +1,10 @@
 import api from "./api";
 
 export const adminService = {
-  createJuniorAdmin: (data: {
-    firstName: string;
-    lastName: string;
+  createAdminInvitation: (data: {
     email: string;
-    phoneNumber: string;
-    password: string;
-  }) => api.post("/Auth/create-junior-admin", data),
-
-  createSuperAdmin: (data: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phoneNumber: string;
-    password: string;
-  }) => api.post("/Auth/create-super-admin", data),
+    role: "JuniorAdmin" | "SuperAdmin";
+  }) => api.post("/Auth/create-admin-invitation", data),
 
   deleteUser: (id: number) => api.delete(`/Auth/delete-user/${id}`),
 };

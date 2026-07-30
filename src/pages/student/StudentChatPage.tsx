@@ -191,7 +191,7 @@ export function StudentChatPage() {
               >
                 <option value="Support">Support</option>
                 <option value="Report">Report</option>
-                <option value="Counseling">Counseling</option>
+                {/* <option value="Counseling">Counseling</option> */}
               </select>
             </Field>
 

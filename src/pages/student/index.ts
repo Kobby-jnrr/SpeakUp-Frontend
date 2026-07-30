@@ -11,5 +11,6 @@ export { StudentAboutPage } from "./StudentAboutPage";
 export { StudentContactPage } from "./StudentContactPage";
 export { StudentSettingsPage } from "./StudentSettingsPage";
 export { StudentChatPage } from "./StudentChatPage";
+export { StudentSearchPage } from "./StudentSearchPage";
 
 export { EmergencyPage } from "./EmergencyPage";

@@ -438,11 +438,17 @@ export function ReportForm() {
       </Panel>
 
       {/* Section F */}
+      {/* Section F */}
       <Panel>
         <h2 className="text-lg font-bold text-slate-950">
           Section F: Prior Action
         </h2>
-        <div className="mt-4 flex gap-4">
+
+        <p className="mt-4 text-sm font-medium text-slate-700">
+          Has this incident happened before?
+        </p>
+
+        <div className="mt-3 flex gap-4">
           {["Yes", "No"].map((option) => (
             <label
               key={option}
@@ -460,30 +466,17 @@ export function ReportForm() {
         </div>
 
         {form.reportedBefore === "Yes" && (
-          <div className="mt-4">
-            <Field label="If yes, where?">
+          <div className="mt-5">
+            <Field label="If yes, where did it happen?">
               <input
                 className={inputClass}
+                placeholder="e.g. Department Office, Halls, Hostels, etc"
                 value={form.priorReportWhere}
                 onChange={(e) => update("priorReportWhere", e.target.value)}
               />
             </Field>
           </div>
         )}
-      </Panel>
-
-      {/* Section G */}
-      <Panel>
-        <h2 className="text-lg font-bold text-slate-950">
-          Section G: Desired Outcome
-        </h2>
-        <Field label="What outcome are you seeking?">
-          <textarea
-            className={`${inputClass} min-h-28`}
-            value={form.desiredOutcome}
-            onChange={(e) => update("desiredOutcome", e.target.value)}
-          />
-        </Field>
       </Panel>
 
       {/* Section H */}
